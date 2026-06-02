@@ -3,6 +3,9 @@ export const WIRE_VERSION = 1;
 export const COMPACT_JSON_OUTPUT_RULE =
   '输出要求：只输出一个合法 JSON 对象；不要 Markdown 或代码块；允许正常 JSON 排版空格和换行。';
 
+export const SENTENCE_TRANSLATE_OPTIONS_RULE =
+  'sentence-translate 的 options 必须按词卡数量完整包含 answers：answers 中同一个中文词语每出现一次，options 中也必须至少出现一次。重复词语不得去重。例如 answers 为 ["我","让","妹妹","叫醒了","我"] 时，options 中必须提供两个 "我" 词卡。';
+
 export const SCAFFOLD_WIRE_FORMAT = `使用带 key 的 JSON 传输格式：
 {"chapter":{"subtitle":"...","description":"...","icon":"...","color":"#5B4FE9"},"levels":[{"title":"...","topic":"...","grammar":["..."],"icon":"..."}]}
 levels 数量必须严格服从上文的教学节奏要求。id、章节序号、关卡序号、locked、gradient 由程序补全，不要输出。
@@ -13,6 +16,7 @@ grammar 数组中的每一项必须是一个可单独讲解的语法点，不要
 export const QUESTIONS_WIRE_FORMAT = `使用带 key 的 JSON 传输格式：
 {"wf":[{"parts":["...","___","..."],"options":["..."],"answers":["..."],"translation":"...","hint":"...","ruby":{"汉字":"假名"}}],"st":[{"sentence":"...","options":["中文词语"],"answers":["中文词语"],"translation":"...","hint":"...","ruby":{"汉字":"假名"}}],"wm":[{"pairs":[{"jp":"...","cn":"...","ruby":{"汉字":"假名"}}]}]}
 wf=word-fill；st=sentence-translate；wm=word-match。id、type、prompt 由程序补全，不要输出。ruby 是汉字到假名的对象，没有注音时填 {}。
+${SENTENCE_TRANSLATE_OPTIONS_RULE}
 示例仅展示格式，真实输出必须包含 4 个 wf、3 个 st、2 个 wm；每个 wm 的 pairs 固定 4 对。
 单行示例：{"wf":[{"parts":["私","___","田中です。"],"options":["は","が","を","に"],"answers":["は"],"translation":"我是田中。","hint":"「は」是话题助词","ruby":{"私":"わたし","田中":"たなか"}}],"st":[{"sentence":"田中さんは学生です。","options":["田中","是","学生","老师","我"],"answers":["田中","是","学生"],"translation":"田中是学生。","hint":"「です」相当于中文的「是」","ruby":{"田中":"たなか","学生":"がくせい"}}],"wm":[{"pairs":[{"jp":"私","cn":"我","ruby":{"私":"わたし"}},{"jp":"先生","cn":"老师","ruby":{"先生":"せんせい"}},{"jp":"学生","cn":"学生","ruby":{"学生":"がくせい"}},{"jp":"日本","cn":"日本","ruby":{"日本":"にほん"}}]}]}`;
 
@@ -291,6 +295,39 @@ export function decodeSectionsWire(raw) {
 
 export function repairGrammarSections(sections) {
   return decodeSectionEntries(sections, 'sections');
+}
+
+export function repairSentenceTranslateOptions(question) {
+  if (question?.type !== 'sentence-translate') return question;
+
+  const options = Array.isArray(question.options) ? question.options : [];
+  const answers = Array.isArray(question.answers) ? question.answers : [];
+  const availableCounts = new Map();
+
+  options.forEach(option => {
+    availableCounts.set(option, (availableCounts.get(option) ?? 0) + 1);
+  });
+
+  const missingOptions = [];
+  answers.forEach(answer => {
+    if (typeof answer !== 'string' || answer.length === 0) return;
+    const availableCount = availableCounts.get(answer) ?? 0;
+    if (availableCount > 0) {
+      availableCounts.set(answer, availableCount - 1);
+    } else {
+      missingOptions.push(answer);
+    }
+  });
+
+  return missingOptions.length > 0
+    ? { ...question, options: [...options, ...missingOptions] }
+    : question;
+}
+
+export function repairQuestions(questions) {
+  return Array.isArray(questions)
+    ? questions.map(repairSentenceTranslateOptions)
+    : questions;
 }
 
 function decodeWordFill(entry, idx) {

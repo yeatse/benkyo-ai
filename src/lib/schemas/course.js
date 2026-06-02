@@ -19,7 +19,7 @@ export const SentenceTranslateQuestionSchema = z.object({
   type: z.literal('sentence-translate'),
   prompt: z.string().describe('题目说明，如"将句子翻译成中文"'),
   sentence: z.string().describe('需要翻译的日语句子'),
-  options: z.array(z.string()).describe('可选词语列表（含干扰项），5~6 个中文词'),
+  options: z.array(z.string()).describe('可选中文词卡列表（含干扰项）；必须按出现次数完整包含 answers，重复答案词不得去重'),
   answers: z.array(z.string()).describe('按顺序排列的正确答案词语'),
   translation: z.string().describe('正确的中文翻译'),
   hint: z.string().describe('语法或词汇提示'),

@@ -1,14 +1,24 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { repairGrammarSections } from '../lib/course-wire.js';
+import { repairGrammarSections, repairQuestions } from '../lib/course-wire.js';
+
+function repairLevel(level) {
+  if (!level || !Array.isArray(level.questions)) return level;
+  return { ...level, questions: repairQuestions(level.questions) };
+}
 
 function repairChapter(chapter) {
-  const sections = chapter?.grammar?.sections;
-  if (!Array.isArray(sections)) return chapter;
+  if (!chapter || typeof chapter !== 'object') return chapter;
+  const repairedChapter = {
+    ...chapter,
+    levels: Array.isArray(chapter.levels) ? chapter.levels.map(repairLevel) : chapter.levels,
+  };
+  const sections = chapter.grammar?.sections;
+  if (!Array.isArray(sections)) return repairedChapter;
 
   try {
     return {
-      ...chapter,
+      ...repairedChapter,
       grammar: {
         ...chapter.grammar,
         sections: repairGrammarSections(sections),
@@ -16,7 +26,7 @@ function repairChapter(chapter) {
     };
   } catch (error) {
     console.warn('[courseStore] failed to repair persisted grammar sections:', error);
-    return chapter;
+    return repairedChapter;
   }
 }
 

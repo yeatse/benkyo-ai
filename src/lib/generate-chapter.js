@@ -11,6 +11,7 @@ import {
   decodeRecommendationsWire,
   decodeScaffoldWire,
   decodeSectionsWire,
+  repairQuestions,
 } from './course-wire.js';
 
 // ─── Thinking depth helper ─────────────────────────────────────────────────────
@@ -654,7 +655,7 @@ function parseGrammarSections(raw, expectedGrammarPoints) {
 
 function normalizeQuestions(raw) {
   const questions = raw?.questions ?? (Array.isArray(raw) ? raw : []);
-  return questions.map((q, idx) => {
+  return repairQuestions(questions.map((q, idx) => {
     const id = q.id ?? q.question_id ?? `q${idx + 1}`;
     if (q.type === 'word-fill') {
       return {
@@ -692,7 +693,7 @@ function normalizeQuestions(raw) {
       };
     }
     return { id, ...q };
-  });
+  }));
 }
 
 // ─── Step 1: Generate chapter scaffold ────────────────────────────────────────
