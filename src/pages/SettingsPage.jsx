@@ -46,6 +46,22 @@ const TTS_PROVIDER_OPTIONS = Object.entries(TTS_PROVIDER_PRESETS).map(([id, info
   defaultBaseUrl: info.baseUrl,
 }));
 
+function VisibilityIcon({ visible }) {
+  return visible ? (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M3 3L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M10.6 10.7A2 2 0 0 0 13.3 13.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M9.4 4.2C10.2 4.1 11.1 4 12 4C16.6 4 20.1 7 22 12C21.5 13.3 20.9 14.4 20.1 15.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.2 5.5C4.3 6.8 2.9 9 2 12C3.9 17 7.4 20 12 20C13.8 20 15.4 19.5 16.8 18.6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M2 12C3.9 7 7.4 4 12 4C16.6 4 20.1 7 22 12C20.1 17 16.6 20 12 20C7.4 20 3.9 17 2 12Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
 export default function SettingsPage() {
   const navigate = useNavigate();
   const savedConfig = useAiStore(s => s.getConfig)();
@@ -419,14 +435,17 @@ export default function SettingsPage() {
                 }}
               />
               <button
+                type="button"
                 onClick={() => setShowKey(v => !v)}
+                aria-label={showKey ? '隐藏 API 密钥' : '显示 API 密钥'}
+                title={showKey ? '隐藏 API 密钥' : '显示 API 密钥'}
                 style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                   background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 16, color: '#9CA3AF', padding: 2,
+                  color: '#9CA3AF', padding: 2,
                 }}
               >
-                {showKey ? '🙈' : '👁️'}
+                <VisibilityIcon visible={showKey} />
               </button>
             </div>
           </div>
@@ -581,14 +600,17 @@ export default function SettingsPage() {
                 }}
               />
               <button
+                type="button"
                 onClick={() => setShowTtsKey(v => !v)}
+                aria-label={showTtsKey ? '隐藏 TTS API 密钥' : '显示 TTS API 密钥'}
+                title={showTtsKey ? '隐藏 TTS API 密钥' : '显示 TTS API 密钥'}
                 style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                   background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 16, color: '#9CA3AF', padding: 2,
+                  color: '#9CA3AF', padding: 2,
                 }}
               >
-                {showTtsKey ? '🙈' : '👁️'}
+                <VisibilityIcon visible={showTtsKey} />
               </button>
             </div>
           </div>
@@ -720,7 +742,7 @@ export default function SettingsPage() {
           {thinkingDepth === 'deep' && (
             <div style={{ background: '#FEF3C7', border: '1.5px solid #FCD34D', borderRadius: 10, padding: '10px 12px', marginTop: 10 }}>
               <p style={{ fontSize: 12, color: '#92400E', margin: 0, lineHeight: 1.6 }}>
-                ⏳ 深度思考模式下，AI 推理过程较长，生成课程通常需要 <strong>3 分钟以上</strong>。若希望加快生成，可切换为「标准」或「快速」模式。
+                ⏳ 深度思考模式下，AI 推理过程较长，生成课程通常需要 <strong>3 分钟左右</strong>，具体取决于模型的速率。若希望加快生成，可切换为「标准」或「快速」模式。
               </p>
             </div>
           )}
@@ -731,7 +753,7 @@ export default function SettingsPage() {
           background: '#FFFBEB', border: '1.5px solid #FDE68A',
           borderRadius: 16, padding: '14px 16px',
         }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#92400E', marginBottom: 6 }}>💡 提示</p>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#92400E', marginBottom: 6 }}>提示</p>
           <p style={{ fontSize: 12, color: '#78350F', lineHeight: 1.6, margin: 0 }}>
             API 密钥仅保存在本地设备，不会上传至任何服务器。配置完成后即可使用 AI 生成课程内容。
           </p>

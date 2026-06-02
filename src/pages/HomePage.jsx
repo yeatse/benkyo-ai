@@ -1,14 +1,13 @@
 import LevelMap from '../components/Map/LevelMap';
-import useGameStore, { computeLevel } from '../store/gameStore';
+import useGameStore, { computeLevel, XP_PER_LEVEL } from '../store/gameStore';
 import HeartDisplay from '../components/UI/HeartDisplay';
 import AutoGenWidget from '../components/UI/AutoGenWidget';
 import logoImg32 from '../assets/icons/logo_32.png';
-import lvImg from '../assets/icons/ui/lv.png';
-import lvUpImg from '../assets/icons/ui/level_up.png';
 
 export default function HomePage() {
   const totalXp = useGameStore(s => s.totalXp);
   const level = computeLevel(totalXp);
+  const levelProgress = (totalXp % XP_PER_LEVEL) / XP_PER_LEVEL * 100;
 
   return (
     <div data-ui-click-sfx className="flex flex-col h-full bg-[#F5F3FF]">
@@ -22,13 +21,21 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-3">
           <HeartDisplay size="sm" />
-          <div className="flex items-center gap-1 bg-[var(--tp-lite)] rounded-full px-3 py-1">
-            <img src={lvImg} alt="等级" width={32} height={32} style={{ objectFit: 'contain' }} />
-            <span className="text-xs font-bold text-[var(--tp)]">Lv.{level}</span>
-          </div>
-          <div className="flex items-center gap-1 bg-[#FEF3C7] rounded-full px-3 py-1">
-            <img src={lvUpImg} alt="XP" width={32} height={32} style={{ objectFit: 'contain' }} />
-            <span className="text-xs font-bold text-[#D97706]">{totalXp} XP</span>
+          <div className="min-w-[104px] bg-[var(--tp-lite)] rounded-full px-3 py-2">
+            <span className="block text-xs font-bold text-[var(--tp)] leading-none mb-1.5">Lv.{level}</span>
+            <div
+              className="h-1.5 rounded-full bg-white/80 overflow-hidden"
+              role="progressbar"
+              aria-label={`等级 ${level} 升级进度`}
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={Math.round(levelProgress)}
+            >
+              <div
+                className="h-full rounded-full bg-[var(--tp)] transition-[width] duration-300"
+                style={{ width: `${levelProgress}%` }}
+              />
+            </div>
           </div>
         </div>
       </header>
