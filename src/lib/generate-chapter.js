@@ -320,6 +320,21 @@ function normalizeChapterNum(title) {
   return title.replace(/第([一二三四五六七八九十]+)章/, (_, n) => `第${ZH_NUMS[n] ?? n}章`);
 }
 
+function formatRecommendedChapterTitle(title, chapterNum, fallback = '章节推荐') {
+  const subtitle = (typeof title === 'string' ? title : '')
+    .trim()
+    .replace(/^第(?:\d+|[一二三四五六七八九十百零两]+)章\s*[：:·\-—]?\s*/, '')
+    .trim();
+  return `第${chapterNum}章：${subtitle || fallback}`;
+}
+
+function summarizeChapterGrammar(chapter) {
+  return (chapter?.grammar?.sections ?? [])
+    .filter(section => section.type === 'grammar-rule')
+    .map(section => section.reading ? `${section.title}（${section.reading}）` : section.title)
+    .join('、') || '（无）';
+}
+
 function lightenHex(hex, amount = 30) {
   try {
     const n = parseInt(hex.replace('#', ''), 16);
@@ -969,17 +984,14 @@ async function generateNextScaffold(aiConfig, context, chapterId, signal, onProg
   const model = getModel(aiConfig);
   const { recentChapters, lastChapter, selectedTopic, userAnswers, extraNote } = context;
 
-  // 最近学习的章节摘要（最多 10 个）
-  const recentList = (recentChapters ?? []).slice(-10);
+  // 最近学习的章节摘要（最多 20 个），用于延续课程并避免重复堆叠同类语法。
+  const recentList = (recentChapters ?? []).slice(-20);
   const chaptersContext = recentList.map((ch, i) =>
-    `${i + 1}. 「${ch.title}·${ch.subtitle}」：${(ch.levels ?? []).map(lv => lv.topic).join('、')}`
-  ).join('\n');
+    `${i + 1}. 「${ch.title}·${ch.subtitle}」\n   关卡主题：${(ch.levels ?? []).map(lv => lv.topic).join('、')}\n   已学语法：${summarizeChapterGrammar(ch)}`
+  ).join('\n\n');
 
   // 上一章节语法摘要
-  const lastGrammar = (lastChapter?.grammar?.sections ?? [])
-    .filter(s => s.type === 'grammar-rule')
-    .map(s => `${s.title}（${s.reading}）`)
-    .join('、') || '（无）';
+  const lastGrammar = summarizeChapterGrammar(lastChapter);
 
   const userCtx = userAnswers ? buildUserContext(userAnswers) : '';
   const chapterNum = parseInt(chapterId.replace('ch', ''), 10);
@@ -1001,6 +1013,8 @@ ${chaptersContext}
 
 请设计「${selectedTopic.title}」新章节的课程骨架，要求：
 - 难度循序渐进，围绕本章选定的新语法进行专项练习、复习和综合运用
+- 优先延伸上一章节的主题、剧情和人物关系，补充尚未教授的相关语法
+- 结合最近 20 章语法判断学习进度：相关语法类别尚未充分覆盖时继续接续；已经足够掌握时自然过渡到下一类语法，不要重复堆叠
 - 不重复已学内容，自然衔接上一章节难度
 - 关卡标题和主题紧密契合本章节内容
 【重要】若学习者的补充需求中有特定风格要求（如 GALGAME 风格、旅行场景等），每个关卡标题和主题都应鲜明体现该风格。
@@ -1037,7 +1051,7 @@ ${SCAFFOLD_WIRE_FORMAT}
  *
  * @param {object} aiConfig  - { provider, apiKey, modelId, baseUrl }
  * @param {object} context
- * @param {Array}  context.recentChapters  - 最近学习的章节列表（最多取后 10 个）
+ * @param {Array}  context.recentChapters  - 已学习的章节列表（推荐时最多取后 20 个）
  * @param {object} context.lastChapter     - 最近完成的章节（用于提取语法摘要）
  * @param {object} [context.userAnswers]   - 学习者偏好（来自 learningProfile）
  * @param {AbortSignal} [context.signal]
@@ -1047,19 +1061,16 @@ export async function generateChapterRecommendations(aiConfig, { recentChapters,
   const sig = signal ?? AbortSignal.timeout(120_000);
   const model = getModel(aiConfig);
 
-  // 最近学习的章节摘要（最多 10 个）
-  const recentList = (recentChapters ?? []).slice(-10);
+  const nextChapterNum = (recentChapters?.length ?? 0) + 1;
+
+  // 最近学习的章节摘要（最多 20 个），让模型判断某个语法类别是否已经学够。
+  const recentList = (recentChapters ?? []).slice(-20);
   const chaptersContext = recentList.map((ch, i) =>
-    `${i + 1}. 「${ch.title}·${ch.subtitle}」\n   描述：${ch.description || '（无）'}\n   关卡主题：${(ch.levels ?? []).map(lv => lv.topic).join('、')}`
+    `${i + 1}. 「${ch.title}·${ch.subtitle}」\n   描述：${ch.description || '（无）'}\n   关卡主题：${(ch.levels ?? []).map(lv => lv.topic).join('、')}\n   已学语法：${summarizeChapterGrammar(ch)}`
   ).join('\n\n');
 
   // 上一章节的语法要点摘要
-  const lastGrammar = lastChapter
-    ? (lastChapter.grammar?.sections ?? [])
-        .filter(s => s.type === 'grammar-rule')
-        .map(s => `${s.title}（${s.reading}）`)
-        .join('、') || '（无）'
-    : '（无）';
+  const lastGrammar = summarizeChapterGrammar(lastChapter);
 
   const userCtx = userAnswers ? buildUserContext(userAnswers) : '';
   const extraHint = userAnswers?.extra?.trim() ? `\n学习者个性化需求：${userAnswers.extra.trim()}` : '';
@@ -1067,18 +1078,25 @@ export async function generateChapterRecommendations(aiConfig, { recentChapters,
   const { object: raw } = await generateObjectWithDebugLog(aiConfig, {
     model,
     output: 'no-schema',
-    system: `你是专业的日语互动课程顾问。根据学习者的已学内容和水平，推荐 4 个适合下一步学习的章节课程方向。${userCtx ? `\n学习者信息：\n${userCtx}` : ''}`,
-    prompt: `学习者已完成以下章节（最近学习的在后）：
+    system: `你是专业的日语互动课程顾问。根据学习者的已学内容和水平，规划具有剧情连续性、语法递进合理的下一章节候选方向。${userCtx ? `\n学习者信息：\n${userCtx}` : ''}`,
+    prompt: `【下一章节编号】
+必须推荐第 ${nextChapterNum} 章。四个候选标题都必须严格使用「第${nextChapterNum}章：副标题」格式；它们是同一个下一章节的四种备选方向，不是连续四章。
+
+【最近 20 个已学章节，最近学习的在后】
 
 ${chaptersContext}
 
-最近完成的章节「${lastChapter?.subtitle || ''}」已学语法要点：${lastGrammar}${extraHint}
+【最近完成的章节】
+章节：${lastChapter?.title || '（无）'}「${lastChapter?.subtitle || ''}」
+已学语法要点：${lastGrammar}${extraHint}
 
 请推荐 4 个适合学习者下一步学习的章节方向，要求：
-1. 每个方向侧重点不同（如：新语法点、会话实践、词汇拓展、特定场景等）
-2. 难度自然衔接已学内容，循序渐进
-3. 不重复已学习的主题
-4. 若学习者有个性化需求，优先考虑其偏好
+1. 默认优先延伸上一章节的主题、人物关系和剧情，设计自然发生的后续场景，而不是给出 4 个互不相关的新知识点。
+2. 默认优先补充和接续上一章尚未教授的同类相关语法。例如上一章教授「しかし、だから」，下一章可考虑「また」等尚未覆盖的相关表达。
+3. 必须结合最近 20 章已学语法和学习者水平判断：若当前语法类别已经足够掌握，则应自然过渡到下一类适合学习的语法，不要为了连续性反复堆叠同类知识。
+4. 四个候选可以采用不同的后续场景、补充重点或自然过渡方案，但都应与上一章保持合理衔接。
+5. 不要重复已经教授过的具体语法点。若学习者有个性化需求，优先维持其偏好和故事风格。
+6. topic 要明确说明拟补充的语法类别或表达方向；description 要简述它如何承接上一章，以及为何适合当前进度。
 
 ${RECOMMENDATIONS_WIRE_FORMAT}
 
@@ -1094,11 +1112,18 @@ ${COMPACT_JSON_OUTPUT_RULE}`,
 
   const decoded = decodeRecommendationsWire(raw);
   const recs = decoded?.recommendations ?? (Array.isArray(decoded) ? decoded : []);
-  return recs.slice(0, 4).map(r => ({
-    title: r.title ?? r.name ?? r.chapter_name ?? '章节推荐',
-    topic: r.topic ?? r.content ?? r.subject ?? '',
-    description: r.description ?? r.reason ?? r.desc ?? '',
-  }));
+  return recs.slice(0, 4).map(r => {
+    const topic = r.topic ?? r.content ?? r.subject ?? '';
+    return {
+      title: formatRecommendedChapterTitle(
+        r.title ?? r.name ?? r.chapter_name,
+        nextChapterNum,
+        topic || '章节推荐'
+      ),
+      topic,
+      description: r.description ?? r.reason ?? r.desc ?? '',
+    };
+  });
 }
 
 // ─── Main export: generate first chapter ──────────────────────────────────────
@@ -1175,12 +1200,12 @@ export async function generateNextChapter(aiConfig, context, { onProgress, signa
   const chapterId = `ch${(recentChapters?.length ?? 0) + 1}`;
 
   // 将已学章节上下文和用户补充需求合并进 extra 字段，传给语法 / 题目生成步骤
-  const recentList = (recentChapters ?? []).slice(-10);
+  const recentList = (recentChapters ?? []).slice(-20);
   const chaptersCtxStr = recentList.map(ch =>
-    `「${ch.subtitle}」关卡：${(ch.levels ?? []).map(lv => lv.topic).join('、')}`
-  ).join('\n');
+    `「${ch.title}·${ch.subtitle}」\n关卡：${(ch.levels ?? []).map(lv => lv.topic).join('、')}\n已学语法：${summarizeChapterGrammar(ch)}`
+  ).join('\n\n');
   const enrichedExtra = [
-    `已学章节参考（请勿重复这些内容）：\n${chaptersCtxStr}`,
+    `最近 20 个已学章节参考（请勿重复具体语法；相关类别尚未学够时继续补充，已经足够时自然过渡）：\n${chaptersCtxStr}`,
     extraNote?.trim() ? `学习者补充需求：${extraNote.trim()}` : null,
   ].filter(Boolean).join('\n\n');
 

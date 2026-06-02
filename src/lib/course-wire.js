@@ -21,9 +21,9 @@ ${SENTENCE_TRANSLATE_OPTIONS_RULE}
 单行示例：{"wf":[{"parts":["私","___","田中です。"],"options":["は","が","を","に"],"answers":["は"],"translation":"我是田中。","hint":"「は」是话题助词","ruby":{"私":"わたし","田中":"たなか"}}],"st":[{"sentence":"田中さんは学生です。","options":["田中","是","学生","老师","我"],"answers":["田中","是","学生"],"translation":"田中是学生。","hint":"「です」相当于中文的「是」","ruby":{"田中":"たなか","学生":"がくせい"}}],"wm":[{"pairs":[{"jp":"私","cn":"我","ruby":{"私":"わたし"}},{"jp":"先生","cn":"老师","ruby":{"先生":"せんせい"}},{"jp":"学生","cn":"学生","ruby":{"学生":"がくせい"}},{"jp":"日本","cn":"日本","ruby":{"日本":"にほん"}}]}]}`;
 
 export const RECOMMENDATIONS_WIRE_FORMAT = `使用带 key 的 JSON 传输格式：
-{"recommendations":[{"title":"...","topic":"...","description":"..."}]}
-recommendations 必须包含 4 个推荐方向。
-单行示例：{"recommendations":[{"title":"餐厅点餐","topic":"学习点餐常用表达和数量词","description":"适合拓展旅行会话"},{"title":"问路出行","topic":"学习方位和交通表达","description":"衔接日常交流"},{"title":"酒店入住","topic":"学习住宿登记和礼貌请求","description":"补充旅行必备表达"},{"title":"购物结账","topic":"学习询价和结账常用句","description":"巩固数字与数量词"}]}`;
+{"recommendations":[{"title":"第N章：...","topic":"...","description":"..."}]}
+recommendations 必须包含 4 个推荐方向。title 必须使用上文指定的下一章节编号，严格采用「第N章：副标题」格式。
+单行示例：{"recommendations":[{"title":"第2章：和妹妹上学的路上","topic":"延续家人日常场景，补充并列和递进关系的接续词","description":"承接上一章的午后对话，在上学路上自然扩展表达"},{"title":"第2章：放学后的便利店","topic":"延续日常剧情，补充因果和转折关系的相关表达","description":"维持人物和故事连续性，在新场景中巩固同类语法"},{"title":"第2章：雨天共撑一把伞","topic":"延续同行场景，根据已学进度补充尚未覆盖的接续表达","description":"在连续剧情中增加更自然的句子衔接"},{"title":"第2章：周末的新约定","topic":"若接续词已足够掌握，则自然过渡到计划和邀请表达","description":"避免重复堆叠同类语法，并保持剧情连贯"}]}`;
 
 export const GRAMMAR_OBJECT_JSON_FORMAT = `Use this keyed JSON grammar format:
 {"intro":"...","rules":[{"badge":"...","badgeColor":"#5B4FE9","title":"...","reading":"...","description":"...","pattern":[{"text":"..."},{"label":"...","color":"#5B4FE9"}],"examples":[{"parts":[{"text":"...","kana":"..."}],"translation":"...","note":"..."}],"casual":"..."}],"tips":[{"icon":"...","title":"...","content":"..."}],"vocabulary":{"title":"...","words":[{"jp":"...","kana":"...","cn":"...","pos":"..."}]}}
