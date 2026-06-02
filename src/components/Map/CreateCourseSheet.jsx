@@ -14,11 +14,9 @@ gsap.registerPlugin(useGSAP);
 
 const TOPIC_OPTIONS = {
   beginner: [
-    { value: '五十音图与平假名', label: '五十音图', desc: '从最基础的假名开始' },
     { value: '日常问候用语', label: '日常问候', desc: 'こんにちは、ありがとう…' },
     { value: '数字与颜色', label: '数字与颜色', desc: '1・2・3 和颜色词汇' },
     { value: '自我介绍基础', label: '自我介绍', desc: '我叫…，来自…' },
-    { value: '片假名入门', label: '片假名', desc: '外来语的书写与读法' },
     { value: '家族称谓', label: '家族称谓', desc: '家庭成员的日语叫法' },
     { value: '食物与饮食词汇', label: '食物词汇', desc: '寿司、拉面等常见食物' },
     { value: '日常物品名称', label: '日常物品', desc: '身边常见事物的说法' },
@@ -30,6 +28,8 @@ const TOPIC_OPTIONS = {
     { value: '购物基础用语', label: '购物基础', desc: '这个多少钱？我要买…' },
     { value: '交通工具词汇', label: '交通工具', desc: '电车、公交、出租车' },
     { value: '情绪与感受表达', label: '情绪词汇', desc: '高兴、难过、累了等' },
+    { value: '地点与方向', label: '地点与方向', desc: '指路和方位表达' },
+    { value: '兴趣爱好表达', label: '兴趣爱好', desc: '好きなこと・趣味' },
   ],
   elementary: [
     { value: '自我介绍', label: '自我介绍', desc: '用日语说「我是…」' },
@@ -85,6 +85,46 @@ const TOPIC_OPTIONS = {
     { value: '时间顺序与先后表达', label: '时间顺序', desc: '〜前に・〜後で 等' },
     { value: '比较与对比句型', label: '比较句型', desc: 'AよりB・AほどB 等' },
   ],
+  n3: [
+    { value: '条件表达的细微差别', label: '条件表达', desc: 'たら・ば・なら・と 的辨析' },
+    { value: '推测与可能性表达', label: '推测表达', desc: '〜ようだ・〜みたいだ・〜らしい' },
+    { value: '意志计划与决定', label: '意志计划', desc: '〜ことにする・〜ことになる' },
+    { value: '原因理由与转折', label: '原因转折', desc: '〜ために・〜のに・〜おかげで' },
+    { value: '动作状态与变化', label: '状态变化', desc: '〜ていく・〜てくる・〜ようになる' },
+    { value: '日常会话中的省略表达', label: '会话省略', desc: '更自然地理解和回应对话' },
+    { value: '旅行突发状况沟通', label: '旅行应对', desc: '问询、说明和解决问题' },
+    { value: '短文阅读与信息提取', label: '短文阅读', desc: '通知、邮件和生活文章' },
+  ],
+  n2: [
+    { value: '复合助词与书面表达', label: '复合助词', desc: '〜に対して・〜に関して 等' },
+    { value: '高级条件与假设表达', label: '高级条件', desc: '〜限り・〜以上・〜ものなら' },
+    { value: '因果关系与逻辑连接', label: '逻辑连接', desc: '梳理较复杂文章的论证关系' },
+    { value: '正式场合的敬语运用', label: '正式敬语', desc: '商务和公共场合的得体表达' },
+    { value: '新闻报道常用表达', label: '新闻表达', desc: '理解报道中的书面句式' },
+    { value: '职场邮件与联络', label: '职场邮件', desc: '确认、请求、汇报与致歉' },
+    { value: '抽象话题意见表达', label: '意见表达', desc: '阐述立场并回应不同看法' },
+    { value: '长句结构分析', label: '长句分析', desc: '拆解修饰关系和句子主干' },
+  ],
+  n1: [
+    { value: '高级语法辨析与语感', label: '高级语法', desc: '掌握相近句型的使用边界' },
+    { value: '社论与评论文章阅读', label: '评论阅读', desc: '理解抽象论述和隐含立场' },
+    { value: '正式演讲与观点陈述', label: '正式演讲', desc: '清晰组织复杂观点' },
+    { value: '惯用表达与四字熟语', label: '惯用表达', desc: '提升书面和口头表达密度' },
+    { value: '商务谈判与提案', label: '商务提案', desc: '说明方案、权衡与推进决策' },
+    { value: '文学作品中的表达', label: '文学阅读', desc: '感受语气、修辞和叙事风格' },
+    { value: '社会议题深入讨论', label: '社会议题', desc: '表达分析、反驳和总结' },
+    { value: '高阶听力与即时概括', label: '高阶听力', desc: '抓住访谈和讲座的重点' },
+  ],
+  advanced: [
+    { value: '自然口语与语气调整', label: '自然口语', desc: '根据关系和场合切换说法' },
+    { value: '日语写作润色与改写', label: '写作润色', desc: '让表达更准确、流畅和自然' },
+    { value: '复杂话题即兴讨论', label: '即兴讨论', desc: '快速组织并展开完整观点' },
+    { value: '跨文化沟通中的语用', label: '跨文化沟通', desc: '理解言外之意和沟通习惯' },
+    { value: '影视作品与流行表达', label: '影视表达', desc: '辨析真实口语、俚语和语气' },
+    { value: '专业文章精读', label: '专业精读', desc: '处理高密度信息与复杂结构' },
+    { value: '发音节奏与表达感染力', label: '发音节奏', desc: '改善停顿、重音和连贯表达' },
+    { value: '日语思维与语感训练', label: '语感训练', desc: '减少逐句翻译，提升自然度' },
+  ],
 };
 
 const QUESTIONS = [
@@ -93,10 +133,14 @@ const QUESTIONS = [
     title: '你的日语水平？',
     emoji: '🎓',
     options: [
-      { value: 'beginner',    label: '初学者', desc: '从未接触过日语' },
-      { value: 'elementary',  label: '入门',   desc: '认识假名，会简单词汇' },
+      { value: 'beginner',    label: '初学者', desc: '只能够认识假名' },
+      { value: 'elementary',  label: '入门',   desc: '会一些简单的词汇' },
       { value: 'n5',          label: '初级 N5', desc: '掌握基础语法和常用词汇' },
       { value: 'n4',          label: '初级 N4', desc: '能理解简单日常对话' },
+      { value: 'n3',          label: '中级 N3', desc: '能理解日常话题和短篇文章' },
+      { value: 'n2',          label: '中高级 N2', desc: '能处理较复杂的文章和对话' },
+      { value: 'n1',          label: '高级 N1', desc: '能理解广泛场景中的日语' },
+      { value: 'advanced',    label: '高阶强化', desc: '通过能力考试后继续提升语感' },
     ],
   },
   {
@@ -148,6 +192,8 @@ const QUESTIONS = [
 ];
 
 const TOTAL_STEPS = QUESTIONS.length;
+const LEVEL_PAGE_SIZE = 4;
+const TOPIC_PAGE_SIZE = 4;
 
 // ─── Progress steps for generation phase ──────────────────────────────────────
 
@@ -163,6 +209,7 @@ export default function CreateCourseSheet({ onClose, onDone }) {
   const [phase, setPhase] = useState('wizard'); // 'wizard' | 'generating' | 'error'
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [levelPage, setLevelPage] = useState(0);
   const [topicPage, setTopicPage] = useState(0);
   const [genStep, setGenStep] = useState(0);
   const [genMsg, setGenMsg] = useState(GEN_STEPS[0].label);
@@ -301,10 +348,23 @@ export default function CreateCourseSheet({ onClose, onDone }) {
   };
 
   // ── Topic options (dynamic based on level answer, paginated) ───────────────
+  const allLevelOptions = QUESTIONS[0].options;
+  const levelPageCount = Math.ceil(allLevelOptions.length / LEVEL_PAGE_SIZE);
+  const levelOptions = allLevelOptions.slice(levelPage * LEVEL_PAGE_SIZE, (levelPage + 1) * LEVEL_PAGE_SIZE);
   const allTopicOptions = TOPIC_OPTIONS[answers.level] ?? TOPIC_OPTIONS.beginner;
-  const TOPIC_PAGE_SIZE = 4;
-  const topicPageCount = Math.ceil(allTopicOptions.length / TOPIC_PAGE_SIZE); // 4
+  const topicPageCount = Math.ceil(allTopicOptions.length / TOPIC_PAGE_SIZE);
   const topicOptions = allTopicOptions.slice(topicPage * TOPIC_PAGE_SIZE, (topicPage + 1) * TOPIC_PAGE_SIZE);
+
+  const handleLevelPageChange = (direction) => {
+    setLevelPage(page => page + direction);
+    setTopicPage(0);
+    setAnswers(prev => {
+      const next = { ...prev };
+      delete next.level;
+      delete next.topic;
+      return next;
+    });
+  };
 
   const handleTopicPageChange = () => {
     const nextPage = (topicPage + 1) % topicPageCount;
@@ -382,6 +442,10 @@ export default function CreateCourseSheet({ onClose, onDone }) {
               <WizardContent
                 question={currentQ}
                 answer={currentAnswer}
+                levelOptions={levelOptions}
+                levelPage={levelPage}
+                levelPageCount={levelPageCount}
+                onLevelPageChange={handleLevelPageChange}
                 topicOptions={topicOptions}
                 topicPage={topicPage}
                 topicPageCount={topicPageCount}
@@ -420,8 +484,12 @@ export default function CreateCourseSheet({ onClose, onDone }) {
 
 // ─── Wizard content ────────────────────────────────────────────────────────────
 
-function WizardContent({ question, answer, topicOptions, topicPage, topicPageCount, onTopicPageChange, onSelect, onBack, onNext, onSkip, isFirst, isLast, canNext }) {
-  const options = question.isDynamic ? topicOptions : question.options;
+function WizardContent({ question, answer, levelOptions, levelPage, levelPageCount, onLevelPageChange, topicOptions, topicPage, topicPageCount, onTopicPageChange, onSelect, onBack, onNext, onSkip, isFirst, isLast, canNext }) {
+  const options = question.isDynamic
+    ? topicOptions
+    : question.id === 'level'
+      ? levelOptions
+      : question.options;
 
   return (
     <div>
@@ -469,6 +537,45 @@ function WizardContent({ question, answer, topicOptions, topicPage, topicPageCou
                 <span style={{ fontSize: 11, color: '#9d95d8', fontWeight: 400 }}>
                   {topicPage + 1}/{topicPageCount}
                 </span>
+              </button>
+            </div>
+          )}
+          {question.id === 'level' && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: 14 }}>
+              <button
+                type="button"
+                onClick={() => onLevelPageChange(-1)}
+                disabled={levelPage === 0}
+                className="btn-press"
+                style={{
+                  padding: '8px 14px', borderRadius: 20,
+                  background: levelPage === 0 ? '#f5f5f7' : '#f0eeff',
+                  border: levelPage === 0 ? '1.5px solid #e5e5ea' : '1.5px solid #c5bef8',
+                  cursor: levelPage === 0 ? 'not-allowed' : 'pointer',
+                  fontSize: 13, fontWeight: 600,
+                  color: levelPage === 0 ? '#c4c4cc' : 'var(--tp)',
+                }}
+              >
+                ← 上一页
+              </button>
+              <span style={{ minWidth: 28, textAlign: 'center', fontSize: 12, color: '#9d95d8', fontWeight: 600 }}>
+                {levelPage + 1}/{levelPageCount}
+              </span>
+              <button
+                type="button"
+                onClick={() => onLevelPageChange(1)}
+                disabled={levelPage === levelPageCount - 1}
+                className="btn-press"
+                style={{
+                  padding: '8px 14px', borderRadius: 20,
+                  background: levelPage === levelPageCount - 1 ? '#f5f5f7' : '#f0eeff',
+                  border: levelPage === levelPageCount - 1 ? '1.5px solid #e5e5ea' : '1.5px solid #c5bef8',
+                  cursor: levelPage === levelPageCount - 1 ? 'not-allowed' : 'pointer',
+                  fontSize: 13, fontWeight: 600,
+                  color: levelPage === levelPageCount - 1 ? '#c4c4cc' : 'var(--tp)',
+                }}
+              >
+                下一页 →
               </button>
             </div>
           )}
