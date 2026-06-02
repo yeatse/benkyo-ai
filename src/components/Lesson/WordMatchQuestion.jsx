@@ -3,6 +3,7 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import RubyText from '../UI/RubyText';
 import { playSavedJapaneseSpeech } from '../../lib/japanese-speech-player';
+import { toKanaReading } from '../../lib/japanese-text';
 import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
 
 gsap.registerPlugin(useGSAP);
@@ -130,7 +131,7 @@ export default function WordMatchQuestion({ question, onComplete, onWrongMatch, 
   const handleLeftClick = (pairIdx) => {
     if (locked || matched.has(pairIdx)) return;
     playSoundEffect(SOUND_EFFECT_TYPES.WORD_SELECTED);
-    void playSavedJapaneseSpeech(pairs[pairIdx].jp).catch(() => {});
+    void playSavedJapaneseSpeech(toKanaReading(pairs[pairIdx].jp, pairs[pairIdx].ruby)).catch(() => {});
     if (leftSelected === pairIdx) {
       setLeftSelected(null);
       return;

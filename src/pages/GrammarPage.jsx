@@ -30,6 +30,10 @@ function getExampleText(parts) {
   return (parts || []).map(part => typeof part === 'string' ? part : part?.t || '').join('');
 }
 
+function getExampleReading(parts) {
+  return (parts || []).map(part => typeof part === 'string' ? part : part?.k || part?.t || '').join('');
+}
+
 // ── POS badge colors ─────────────────────────────────────────────────────────
 const POS_COLOR = {
   代词: { bg: 'var(--tp-lite)', color: 'var(--tp)' },
@@ -148,7 +152,10 @@ function GrammarRuleSection({ section }) {
               position: 'relative',
               display: 'flex', alignItems: 'flex-start', gap: 10,
             }}>
-              <JapaneseSpeechButton text={getExampleText(ex.parts)} />
+              <JapaneseSpeechButton
+                text={getExampleText(ex.parts)}
+                spokenText={getExampleReading(ex.parts)}
+              />
               <div style={{ flex: 1, minWidth: 0 }}>
               {ex.note && (
                 <span style={{
@@ -208,7 +215,7 @@ function VocabularySection({ section }) {
               borderRadius: 14, padding: '12px 12px 10px',
               display: 'flex', alignItems: 'flex-start', gap: 8,
             }}>
-              <JapaneseSpeechButton text={w.jp} />
+              <JapaneseSpeechButton text={w.jp} spokenText={w.kana || w.jp} />
               <div style={{ flex: 1, minWidth: 0 }}>
               {/* Kana */}
               <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 500, minHeight: 16 }}>

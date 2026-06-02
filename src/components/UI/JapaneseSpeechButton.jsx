@@ -3,7 +3,12 @@ import useTtsStore from '../../store/ttsStore';
 import { getTtsConfigError } from '../../lib/tts';
 import { playJapaneseSpeech } from '../../lib/japanese-speech-player';
 
-export default function JapaneseSpeechButton({ text, label = `播放「${text}」`, autoPlay = false }) {
+export default function JapaneseSpeechButton({
+  text,
+  spokenText = text,
+  label = `播放「${text}」`,
+  autoPlay = false,
+}) {
   const provider = useTtsStore(s => s.provider);
   const baseUrl = useTtsStore(s => s.baseUrl);
   const modelId = useTtsStore(s => s.modelId);
@@ -48,7 +53,7 @@ export default function JapaneseSpeechButton({ text, label = `播放「${text}�
     abortRef.current = controller;
 
     try {
-      const playback = await playJapaneseSpeech(text, config, { signal: controller.signal });
+      const playback = await playJapaneseSpeech(spokenText, config, { signal: controller.signal });
       if (controller.signal.aborted) return;
       playbackRef.current = playback;
       setStatus('playing');
@@ -67,7 +72,7 @@ export default function JapaneseSpeechButton({ text, label = `播放「${text}�
       setError(formatPlaybackError(err));
       setStatus('error');
     }
-  }, [cleanupPlayback, config, status, text]);
+  }, [cleanupPlayback, config, spokenText, status]);
 
   useEffect(() => {
     if (!autoPlay || configError || hasAutoPlayedRef.current) return;

@@ -3,6 +3,7 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import RubyText from '../UI/RubyText';
 import { playSavedJapaneseSpeech } from '../../lib/japanese-speech-player';
+import { toKanaReading } from '../../lib/japanese-text';
 
 gsap.registerPlugin(useGSAP);
 
@@ -65,7 +66,7 @@ export default function WordFillQuestion({ question, onAnswer, feedbackState, se
   };
 
   const playRubyWord = word => {
-    void playSavedJapaneseSpeech(word).catch(() => {});
+    void playSavedJapaneseSpeech(toKanaReading(word, question.ruby)).catch(() => {});
   };
 
   const getOptionClass = (word) => {

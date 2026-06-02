@@ -3,7 +3,7 @@
  *
  * @param {string} text      - 原始日语文本
  * @param {object} rubyMap   - 汉字 → 读音映射，例如 { "私": "わたし", "田中": "たなか" }
- * @param {(word: string) => void} onRubyClick - 点击带注音词语时的可选回调
+ * @param {(reading: string) => void} onRubyClick - 点击带注音词语时的可选回调
  */
 export default function RubyText({ text, rubyMap = {}, onRubyClick }) {
   const keys = Object.keys(rubyMap);
@@ -49,7 +49,7 @@ export default function RubyText({ text, rubyMap = {}, onRubyClick }) {
           <button
             key={i}
             type="button"
-            onClick={() => onRubyClick(seg.kanji)}
+            onClick={() => onRubyClick(seg.reading)}
             aria-label={`播放「${seg.kanji}」`}
             title={`播放「${seg.kanji}」`}
             style={{

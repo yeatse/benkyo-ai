@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import RubyText from '../UI/RubyText';
 import JapaneseSpeechButton from '../UI/JapaneseSpeechButton';
 import { playSavedJapaneseSpeech } from '../../lib/japanese-speech-player';
+import { toKanaReading } from '../../lib/japanese-text';
 import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
 
 gsap.registerPlugin(useGSAP);
@@ -86,7 +87,11 @@ export default function SentenceTranslateQuestion({ question, onAnswer, feedback
 
       {/* Japanese sentence */}
       <div className="flex items-center justify-center gap-2 text-center mb-4 leading-loose">
-        <JapaneseSpeechButton text={question.sentence} autoPlay />
+        <JapaneseSpeechButton
+          text={question.sentence}
+          spokenText={toKanaReading(question.sentence, question.ruby)}
+          autoPlay
+        />
         <span className="jp text-2xl font-bold text-[#1E1B4B]">
           <RubyText text={question.sentence} rubyMap={question.ruby || {}} onRubyClick={playRubyWord} />
         </span>

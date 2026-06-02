@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import useVocabStore from '../store/vocabStore';
 import RubyText from '../components/UI/RubyText';
 import JapaneseSpeechButton from '../components/UI/JapaneseSpeechButton';
+import { toKanaReading } from '../lib/japanese-text';
 import bookImg from '../assets/icons/ui/book.png';
 import sdNoBooksImg from '../assets/icons/sd/sd_no_books.png';
 
@@ -14,16 +15,6 @@ const SORT_OPTIONS = [
   { id: 'oldest', label: '由旧到新' },
   { id: 'gojuon', label: '五十音' },
 ];
-
-/** 将 jp 文字中的汉字替换为假名读音，用于五十音排序 */
-function getKanaReading(jp, ruby) {
-  if (!ruby || Object.keys(ruby).length === 0) return jp;
-  let result = jp;
-  for (const [kanji, reading] of Object.entries(ruby)) {
-    result = result.split(kanji).join(reading);
-  }
-  return result;
-}
 
 export default function VocabPage() {
   const words = useVocabStore(s => s.words);
@@ -47,8 +38,8 @@ export default function VocabPage() {
       case 'newest': return arr.sort((a, b) => b.addedAt - a.addedAt);
       case 'oldest': return arr.sort((a, b) => a.addedAt - b.addedAt);
       case 'gojuon':  return arr.sort((a, b) => {
-        const ak = getKanaReading(a.jp, a.ruby);
-        const bk = getKanaReading(b.jp, b.ruby);
+        const ak = toKanaReading(a.jp, a.ruby);
+        const bk = toKanaReading(b.jp, b.ruby);
         return ak.localeCompare(bk, 'ja');
       });
       default: return arr;
@@ -213,7 +204,7 @@ function WordCard({ word }) {
         {word.cn}
       </div>
 
-      <JapaneseSpeechButton text={word.jp} />
+      <JapaneseSpeechButton text={word.jp} spokenText={toKanaReading(word.jp, word.ruby)} />
     </div>
   );
 }
