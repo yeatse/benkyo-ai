@@ -6,6 +6,7 @@ import useAiStore from '../../store/aiStore';
 import useUserStore from '../../store/userStore';
 import { generateFirstChapter } from '../../lib/generate-chapter';
 import sdGenerateImg from '../../assets/icons/sd/sd_generate.png';
+import sdErrorImg from '../../assets/icons/sd/sd2_error.png';
 import EstimatedProgressBar from '../UI/EstimatedProgressBar';
 
 gsap.registerPlugin(useGSAP);
@@ -758,7 +759,7 @@ function GeneratingContent({ genStep, genMsg, genProgress }) {
 function ErrorContent({ error, onRetry, onClose }) {
   return (
     <div style={{ textAlign: 'center', padding: '20px 0 10px' }}>
-      <div style={{ fontSize: 52, marginBottom: 20 }}>😵</div>
+      <img src={sdErrorImg} alt="课程生成失败" width={132} height={132} style={{ objectFit: 'contain', marginBottom: 16 }} />
       <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1a1a2e', margin: '0 0 12px' }}>
         课程生成失败
       </h2>
