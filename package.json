@@ -1,5 +1,5 @@
 {
-  "name": "jplearn",
+  "name": "benkyo-ai",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "android:release": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-android.ps1"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.81",

@@ -1,4 +1,4 @@
-# 日学 (JP Learn) - AI 工程指南
+# 日学 (Benkyo AI) - AI 工程指南
 
 日语学习 App，交互参考 Duolingo。使用 React Web 技术栈，通过 Tauri v2 打包桌面端和 Android。
 支持 AI 生成个性化课程、闯关练习、语法教程、单词本、TTS 日语语音和 UI 音效。
@@ -77,7 +77,7 @@ src/
     └── shopItems.js              商店和背包共用道具
 ```
 
-Android 自定义入口：`src-tauri/gen/android/app/src/main/java/com/jplearn/app/MainActivity.kt`。
+Android 自定义入口：`src-tauri/gen/android/app/src/main/java/com/benkyo/ai/MainActivity.kt`。
 
 不要扫描或编辑 `src-tauri/target/`、`src-tauri/gen/android/app/build/` 等构建产物。
 
@@ -107,12 +107,12 @@ Android 自定义入口：`src-tauri/gen/android/app/src/main/java/com/jplearn/a
 
 | Store | 持久化 key | 核心职责 |
 |-------|------------|----------|
-| `userStore` | `jplearn-user` | profile、连续天数、心心、金币、背包、签到、XP 加速、学习档案 |
-| `gameStore` | `jplearn-progress` | 持久化 `levelProgress`、`totalXp`；临时保存当前 `lesson` |
-| `courseStore` | `jplearn-courses` | AI 生成的 `chapters` |
-| `aiStore` | `jplearn-ai-config` | provider、API Key、模型、Base URL、思考深度 |
-| `ttsStore` | `jplearn-tts-config` | TTS provider、API Key、模型、音色 |
-| `vocabStore` | `jplearn-vocab` | 单词本 |
+| `userStore` | `benkyo-ai-user` | profile、连续天数、心心、金币、背包、签到、XP 加速、学习档案 |
+| `gameStore` | `benkyo-ai-progress` | 持久化 `levelProgress`、`totalXp`；临时保存当前 `lesson` |
+| `courseStore` | `benkyo-ai-courses` | AI 生成的 `chapters` |
+| `aiStore` | `benkyo-ai-ai-config` | provider、API Key、模型、Base URL、思考深度 |
+| `ttsStore` | `benkyo-ai-tts-config` | TTS provider、API Key、模型、音色 |
+| `vocabStore` | `benkyo-ai-vocab` | 单词本 |
 | `autoGenStore` | 不持久化 | 后台批量生成进度与 AbortController |
 | `nextChapterGenStore` | 不持久化 | 下一章节生成进度与 AbortController |
 

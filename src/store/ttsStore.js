@@ -55,7 +55,7 @@ const useTtsStore = create(
       },
     }),
     {
-      name: 'jplearn-tts-config',
+      name: 'benkyo-ai-tts-config',
     }
   )
 );

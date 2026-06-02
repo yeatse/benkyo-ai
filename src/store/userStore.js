@@ -156,7 +156,7 @@ const useUserStore = create(
       },
     }),
     {
-      name: 'jplearn-user',
+      name: 'benkyo-ai-user',
       // Persist all relevant fields (profile, streak, hearts)
       partialize: (s) => ({
         profile: s.profile,

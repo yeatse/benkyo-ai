@@ -302,7 +302,7 @@ const useGameStore = create(
       },
     }),
     {
-      name: 'jplearn-progress',
+      name: 'benkyo-ai-progress',
       partialize: (state) => ({
         levelProgress: state.levelProgress,
         totalXp: state.totalXp,

@@ -1,4 +1,4 @@
-const CACHE_DB_NAME = 'jplearn-tts-cache';
+const CACHE_DB_NAME = 'benkyo-ai-tts-cache';
 const CACHE_DB_VERSION = 1;
 const CACHE_STORE_NAME = 'speech-audio';
 const CACHE_KEY_VERSION = 1;

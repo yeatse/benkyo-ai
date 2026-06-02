@@ -7,7 +7,7 @@ import useAiStore from '../../store/aiStore';
 
 gsap.registerPlugin(useGSAP);
 
-const GUIDE_DISMISSED_KEY = 'jplearn-autogen-guide-dismissed-v1';
+const GUIDE_DISMISSED_KEY = 'benkyo-ai-autogen-guide-dismissed-v1';
 
 function hasDismissedGuide() {
   try {

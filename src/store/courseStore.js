@@ -64,7 +64,7 @@ const useCourseStore = create(
       },
     }),
     {
-      name: 'jplearn-courses',
+      name: 'benkyo-ai-courses',
       merge: (persistedState, currentState) => {
         const merged = {
           ...currentState,

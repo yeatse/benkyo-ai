@@ -34,7 +34,7 @@ const useVocabStore = create(
       },
     }),
     {
-      name: 'jplearn-vocab',
+      name: 'benkyo-ai-vocab',
     }
   )
 );

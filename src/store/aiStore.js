@@ -44,7 +44,7 @@ const useAiStore = create(
       },
     }),
     {
-      name: 'jplearn-ai-config',
+      name: 'benkyo-ai-ai-config',
     }
   )
 );
