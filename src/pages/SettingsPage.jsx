@@ -745,6 +745,12 @@ export default function SettingsPage() {
               </p>
             </div>
           )}
+
+          <div style={{ background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 10, padding: '10px 12px', marginTop: 10 }}>
+            <p style={{ fontSize: 12, color: '#4B5563', margin: 0, lineHeight: 1.6 }}>
+              使用 OpenAI、Google、Anthropic 以外的模型可能不支持 reasoning_effort 推理深度设置。当模型不支持时，会尝试添加 thinking_budget 参数来限制推理预算。如果调用 AI 生成时出错，请切换为深度思考模式。深度思考模式下将不再限制推理预算。
+            </p>
+          </div>
         </div>
 
         {/* Tips */}

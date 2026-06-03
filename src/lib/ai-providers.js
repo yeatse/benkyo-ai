@@ -14,6 +14,11 @@ const COMPATIBLE_PROVIDER_PRESETS = {
   'minimax':           { name: 'minimax',            baseURL: 'https://api.minimaxi.com/v1' },
 };
 
+const OPENAI_COMPATIBLE_PROVIDERS = new Set([
+  ...Object.keys(COMPATIBLE_PROVIDER_PRESETS),
+  'openai-compatible',
+]);
+
 /**
  * 根据配置创建 AI 提供商实例
  * @param {{ provider: string, apiKey: string, modelId: string, baseUrl?: string }} config
@@ -79,9 +84,9 @@ export function getModel(config) {
 // 各深度对应的思考 token 预算（仅对支持预算控制的模型生效）
 const THINKING_BUDGETS = {
   deep:     { anthropic: 10000, google: 8192 },
-  standard: { anthropic: 4000,  google: 3000 },
+  standard: { anthropic: 4000,  google: 3000, compatible: 4096 },
   // Anthropic extended thinking requires at least 1,024 tokens.
-  fast:     { anthropic: 1024,  google: 512  },
+  fast:     { anthropic: 1024,  google: 512,  compatible: 1024 },
 };
 
 const REASONING_EFFORTS = { deep: 'high', standard: 'medium', fast: 'low' };
@@ -123,6 +128,10 @@ function getGoogleThinkingConfig(modelId, depth, budget) {
     return { thinkingBudget: budget };
   }
   return null;
+}
+
+function getOpenAICompatibleProviderOptionsKey(provider) {
+  return provider === 'openai-compatible' ? 'openaiCompatible' : provider;
 }
 
 /**
@@ -172,6 +181,18 @@ export function buildThinkingOptions(aiConfig, thinkingDepth = 'deep') {
     return {
       providerOptions: {
         google: { thinkingConfig },
+      },
+    };
+  }
+
+  if (OPENAI_COMPATIBLE_PROVIDERS.has(provider) && depth !== 'deep') {
+    const thinkingBudget = budget.compatible;
+    if (!thinkingBudget) return {};
+    return {
+      providerOptions: {
+        [getOpenAICompatibleProviderOptionsKey(provider)]: {
+          thinking_budget: thinkingBudget,
+        },
       },
     };
   }
