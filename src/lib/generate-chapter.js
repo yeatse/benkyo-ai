@@ -17,7 +17,7 @@ import {
 // ─── Thinking depth helper ─────────────────────────────────────────────────────
 /**
  * 将 AI 配置中的思考深度应用到 AI SDK 调用参数上
- * 处理：输出 token 缩减 / providerOptions 原生思考参数
+ * 只处理 providerOptions 原生思考参数，不限制模型输出 token。
  */
 function applyThinkingOpts(aiConfig, callOptions) {
   const {
@@ -27,19 +27,12 @@ function applyThinkingOpts(aiConfig, callOptions) {
   } = callOptions;
 
   if (disableThinkingOptions) {
-    delete options.maxTokens;
     return options;
   }
 
-  const { maxTokensMultiplier = 1, providerOptions } =
+  const { providerOptions } =
     buildThinkingOptions(aiConfig, callThinkingDepth ?? aiConfig.thinkingDepth);
-  const result = {
-    ...options,
-    maxOutputTokens: Math.round(
-      (options.maxOutputTokens ?? callOptions.maxTokens ?? 4000) * maxTokensMultiplier
-    ),
-  };
-  delete result.maxTokens;
+  const result = { ...options };
   if (providerOptions) result.providerOptions = providerOptions;
   return result;
 }
@@ -55,7 +48,6 @@ const EXPECTED_JSON_CHARS = {
   questions:       4500,
   recommendations: 900,
 };
-const RECOMMENDATION_MAX_OUTPUT_TOKENS = 1000;
 const RECOMMENDATION_DESCRIPTION_MAX_CHARS = 50;
 const CHAPTER_PHASES = [
   { id: 'scaffold',  weight: 0.15 },
@@ -756,7 +748,6 @@ ${SCAFFOLD_WIRE_FORMAT}
 
 现在请为主题「${userAnswers.topic}」生成真实内容。${COMPACT_JSON_OUTPUT_RULE}`,
     temperature: 0.3,
-    maxOutputTokens: 2000,
     abortSignal: signal,
     maxRetries: 1,
   }, {
@@ -806,7 +797,6 @@ ${GRAMMAR_OBJECT_JSON_FORMAT}
 ${userContext}`,
       prompt: grammarPrompt,
       temperature: 0.1,
-      maxOutputTokens: 7000,
       abortSignal: signal,
       maxRetries: 1,
     }, {
@@ -833,7 +823,6 @@ ${userContext}`,
 - 每条规则只保留恰好 2 个简短例句
 - 输出前检查所有大括号、中括号、双引号和逗号是否闭合`,
     temperature: 0,
-    maxOutputTokens: 8000,
     abortSignal: signal,
     maxRetries: 1,
   }, {
@@ -894,7 +883,6 @@ ${QUESTIONS_WIRE_FORMAT}
 
 现在请为关卡「${level1.title}」（${level1.topic}）生成全部 9 道真实题目（4 word-fill + 3 sentence-translate + 2 word-match）。${COMPACT_JSON_OUTPUT_RULE}`,
     temperature: 0.3,
-    maxOutputTokens: 5000,
     abortSignal: signal,
     maxRetries: 1,
   }, {
@@ -961,7 +949,6 @@ ${QUESTIONS_WIRE_FORMAT}
 
 现在请为关卡「${level.title}」（${level.topic}）生成全部 9 道真实题目（4 word-fill + 3 sentence-translate + 2 word-match）。${COMPACT_JSON_OUTPUT_RULE}`,
     temperature: 0.3,
-    maxOutputTokens: 5000,
     abortSignal: signal,
     maxRetries: 1,
   }, {
@@ -1047,7 +1034,6 @@ ${SCAFFOLD_WIRE_FORMAT}
 
 现在请为章节「${selectedTopic.title}」生成真实内容。${COMPACT_JSON_OUTPUT_RULE}`,
     temperature: 0.3,
-    maxOutputTokens: 2000,
     abortSignal: signal,
     maxRetries: 1,
   }, {
@@ -1125,7 +1111,6 @@ ${RECOMMENDATIONS_WIRE_FORMAT}
 
 ${COMPACT_JSON_OUTPUT_RULE}`,
     temperature: 0.6,
-    maxOutputTokens: RECOMMENDATION_MAX_OUTPUT_TOKENS,
     disableThinkingOptions: true,
     abortSignal: sig,
     maxRetries: 1,

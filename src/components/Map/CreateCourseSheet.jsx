@@ -759,7 +759,7 @@ function GeneratingContent({ genStep, genMsg, genProgress }) {
 function ErrorContent({ error, onRetry, onClose }) {
   return (
     <div style={{ textAlign: 'center', padding: '20px 0 10px' }}>
-      <img src={sdErrorImg} alt="课程生成失败" width={132} height={132} style={{ objectFit: 'contain', marginBottom: 16 }} />
+      <img src={sdErrorImg} alt="课程生成失败" width={132} height={132} style={{ display: 'block', objectFit: 'contain', margin: '0 auto 16px' }} />
       <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1a1a2e', margin: '0 0 12px' }}>
         课程生成失败
       </h2>

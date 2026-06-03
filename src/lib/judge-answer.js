@@ -38,7 +38,6 @@ export async function judgeAnswer(aiConfig, question, userAnswer) {
     const result = await generateText({
       model,
       prompt,
-      maxOutputTokens: 150,
     });
     text = result.text;
     logAiGeneratedContent({

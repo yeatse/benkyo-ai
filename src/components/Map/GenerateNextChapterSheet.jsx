@@ -275,7 +275,7 @@ function ExtraPhase({ extraNote, onExtraChange, onBack, onConfirm }) {
 function ErrorPhase({ error, onRetry, onClose }) {
   return (
     <div style={{ textAlign: 'center', padding: '24px 0 10px' }}>
-      <img src={sdErrorImg} alt="推荐生成失败" width={132} height={132} style={{ objectFit: 'contain', marginBottom: 12 }} />
+      <img src={sdErrorImg} alt="推荐生成失败" width={132} height={132} style={{ display: 'block', objectFit: 'contain', margin: '0 auto 12px' }} />
       <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1a1a2e', margin: '0 0 8px' }}>
         推荐生成失败
       </h2>
@@ -381,7 +381,7 @@ function GeneratingContent({ genStep, genMsg, genProgress, onClose }) {
 function GenErrorPhase({ error, onRetry, onClose }) {
   return (
     <div style={{ textAlign: 'center', padding: '24px 0 10px' }}>
-      <img src={sdErrorImg} alt="章节生成失败" width={132} height={132} style={{ objectFit: 'contain', marginBottom: 12 }} />
+      <img src={sdErrorImg} alt="章节生成失败" width={132} height={132} style={{ display: 'block', objectFit: 'contain', margin: '0 auto 12px' }} />
       <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1a1a2e', margin: '0 0 8px' }}>章节生成失败</h2>
       <p style={{ fontSize: 13, color: '#9CA3AF', margin: '0 0 28px', lineHeight: 1.7 }}>
         {error || '请检查 AI 配置是否正确后重试'}

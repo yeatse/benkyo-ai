@@ -155,7 +155,6 @@ export default function SettingsPage() {
         const result = await generateText({
           model,
           prompt: '请回复"OK"，不要说任何其他内容。',
-          maxOutputTokens: 16,
           temperature: 0,
           abortSignal: AbortSignal.timeout(20_000),
           maxRetries: 0,

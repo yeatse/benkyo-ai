@@ -84,11 +84,9 @@ const THINKING_BUDGETS = {
   fast:     { anthropic: 1024,  google: 512  },
 };
 
-// 各深度对应的最大 token 缩减系数（对所有模型生效，减少输出长度来提速）
-const MAX_TOKENS_MULTIPLIERS = { deep: 1.0, standard: 0.9, fast: 0.7 };
-
 const REASONING_EFFORTS = { deep: 'high', standard: 'medium', fast: 'low' };
 const GOOGLE_THINKING_LEVELS = { deep: 'high', standard: 'medium', fast: 'low' };
+const THINKING_DEPTHS = new Set(['deep', 'standard', 'fast']);
 
 function isOpenAIReasoningModel(modelId) {
   const id = (modelId || '').toLowerCase();
@@ -132,18 +130,16 @@ function getGoogleThinkingConfig(modelId, depth, budget) {
  *
  * @param {{ provider: string, modelId: string }} aiConfig
  * @param {'deep'|'standard'|'fast'} thinkingDepth
- * @returns {{ maxTokensMultiplier: number, providerOptions?: object }}
+ * @returns {{ providerOptions?: object }}
  */
 export function buildThinkingOptions(aiConfig, thinkingDepth = 'deep') {
   const { provider, modelId } = aiConfig;
-  const depth = Object.hasOwn(MAX_TOKENS_MULTIPLIERS, thinkingDepth) ? thinkingDepth : 'deep';
-  const multiplier = MAX_TOKENS_MULTIPLIERS[depth] ?? 1.0;
+  const depth = THINKING_DEPTHS.has(thinkingDepth) ? thinkingDepth : 'deep';
   const budget = THINKING_BUDGETS[depth] ?? THINKING_BUDGETS.deep;
   const effort = REASONING_EFFORTS[depth];
 
   if (provider === 'openai' && isOpenAIReasoningModel(modelId)) {
     return {
-      maxTokensMultiplier: multiplier,
       providerOptions: {
         openai: { reasoningEffort: effort },
       },
@@ -154,7 +150,6 @@ export function buildThinkingOptions(aiConfig, thinkingDepth = 'deep') {
     const thinkingType = getAnthropicThinkingType(modelId);
     if (thinkingType === 'adaptive') {
       return {
-        maxTokensMultiplier: multiplier,
         providerOptions: {
           anthropic: {
             thinking: { type: 'adaptive' },
@@ -163,9 +158,8 @@ export function buildThinkingOptions(aiConfig, thinkingDepth = 'deep') {
         },
       };
     }
-    if (thinkingType !== 'budget') return { maxTokensMultiplier: multiplier };
+    if (thinkingType !== 'budget') return {};
     return {
-      maxTokensMultiplier: multiplier,
       providerOptions: {
         anthropic: { thinking: { type: 'enabled', budgetTokens: budget.anthropic } },
       },
@@ -174,14 +168,13 @@ export function buildThinkingOptions(aiConfig, thinkingDepth = 'deep') {
 
   if (provider === 'google') {
     const thinkingConfig = getGoogleThinkingConfig(modelId, depth, budget.google);
-    if (!thinkingConfig) return { maxTokensMultiplier: multiplier };
+    if (!thinkingConfig) return {};
     return {
-      maxTokensMultiplier: multiplier,
       providerOptions: {
         google: { thinkingConfig },
       },
     };
   }
 
-  return { maxTokensMultiplier: multiplier };
+  return {};
 }
