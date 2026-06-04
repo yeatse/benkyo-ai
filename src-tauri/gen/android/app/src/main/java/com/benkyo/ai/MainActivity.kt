@@ -63,7 +63,7 @@ class MainActivity : TauriActivity() {
 
     val launchImage = ImageView(this).apply {
       setImageResource(R.drawable.launcher)
-      scaleType = ImageView.ScaleType.FIT_CENTER
+      scaleType = ImageView.ScaleType.CENTER
       adjustViewBounds = false
       contentDescription = null
     }
