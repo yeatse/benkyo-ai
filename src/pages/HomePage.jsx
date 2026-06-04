@@ -2,10 +2,11 @@ import LevelMap from '../components/Map/LevelMap';
 import useGameStore, { computeLevel, XP_PER_LEVEL } from '../store/gameStore';
 import HeartDisplay from '../components/UI/HeartDisplay';
 import AutoGenWidget from '../components/UI/AutoGenWidget';
-import logoImg32 from '../assets/icons/logo_32.png';
+import { useIcon } from '../lib/icons';
 
 export default function HomePage() {
   const totalXp = useGameStore(s => s.totalXp);
+  const logoImg32 = useIcon('logo_32.png');
   const level = computeLevel(totalXp);
   const levelProgress = (totalXp % XP_PER_LEVEL) / XP_PER_LEVEL * 100;
 

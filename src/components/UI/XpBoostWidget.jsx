@@ -2,8 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useUserStore from '../../store/userStore';
-import exp2Img from '../../assets/icons/item/exp2.png';
-import exp3Img from '../../assets/icons/item/exp3.png';
+import { useIcon } from '../../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
@@ -16,6 +15,8 @@ const BOOST_DURATION_MS = 15 * 60 * 1000;
 export default function XpBoostWidget() {
   const xpBoost     = useUserStore(s => s.xpBoost);
   const syncXpBoost = useUserStore(s => s.syncXpBoost);
+  const exp2Img = useIcon('item/exp2.png');
+  const exp3Img = useIcon('item/exp3.png');
 
   const [now, setNow] = useState(() => Date.now());
   const [isDragging, setIsDragging] = useState(false);

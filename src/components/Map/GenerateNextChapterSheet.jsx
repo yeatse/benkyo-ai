@@ -6,8 +6,7 @@ import useUserStore from '../../store/userStore';
 import useAiStore from '../../store/aiStore';
 import useNextChapterGenStore from '../../store/nextChapterGenStore';
 import { generateChapterRecommendations } from '../../lib/generate-chapter';
-import sdGenerateImg from '../../assets/icons/sd/sd_generate.png';
-import sdErrorImg from '../../assets/icons/sd/sd2_error.png';
+import { useIcon } from '../../lib/icons';
 import EstimatedProgressBar from '../UI/EstimatedProgressBar';
 
 // 生成进度步骤（与 CreateCourseSheet 保持一致）
@@ -22,6 +21,8 @@ gsap.registerPlugin(useGSAP);
 // ── Loading phase ─────────────────────────────────────────────────────────────
 
 function LoadingPhase() {
+  const sdGenerateImg = useIcon('sd/sd_generate.png');
+
   return (
     <div style={{ textAlign: 'center', padding: '32px 0 16px' }}>
       <div className="animate-pulse" style={{ marginBottom: 24, display: 'inline-block' }}>
@@ -273,6 +274,8 @@ function ExtraPhase({ extraNote, onExtraChange, onBack, onConfirm }) {
 // ── Error phase ───────────────────────────────────────────────────────────────
 
 function ErrorPhase({ error, onRetry, onClose }) {
+  const sdErrorImg = useIcon('sd/sd2_error.png');
+
   return (
     <div style={{ textAlign: 'center', padding: '24px 0 10px' }}>
       <img src={sdErrorImg} alt="推荐生成失败" width={132} height={132} style={{ display: 'block', objectFit: 'contain', margin: '0 auto 12px' }} />
@@ -313,6 +316,8 @@ function ErrorPhase({ error, onRetry, onClose }) {
 // ── Generating phase ─────────────────────────────────────────────────────────
 
 function GeneratingContent({ genStep, genMsg, genProgress, onClose }) {
+  const sdGenerateImg = useIcon('sd/sd_generate.png');
+
   return (
     <div style={{ textAlign: 'center', padding: '20px 0 10px' }}>
       <div style={{ marginBottom: 24, animation: 'pulse 1.5s ease-in-out infinite' }}>
@@ -379,6 +384,8 @@ function GeneratingContent({ genStep, genMsg, genProgress, onClose }) {
 // ── Gen-error phase ───────────────────────────────────────────────────────────
 
 function GenErrorPhase({ error, onRetry, onClose }) {
+  const sdErrorImg = useIcon('sd/sd2_error.png');
+
   return (
     <div style={{ textAlign: 'center', padding: '24px 0 10px' }}>
       <img src={sdErrorImg} alt="章节生成失败" width={132} height={132} style={{ display: 'block', objectFit: 'contain', margin: '0 auto 12px' }} />

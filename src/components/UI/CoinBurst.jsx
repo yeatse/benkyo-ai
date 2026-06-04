@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
-import coinImg from '../../assets/icons/item/coin.png';
+import { useIcon } from '../../lib/icons';
 
 /**
  * CoinBurst — individual coin icons burst out in a parabolic arc.
@@ -8,6 +8,7 @@ import coinImg from '../../assets/icons/item/coin.png';
  * Trigger by passing a new `trigger` prop: { amount, uid }.
  */
 export default function CoinBurst({ trigger, targetRef, onCollect }) {
+  const coinImg = useIcon('item/coin.png');
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -91,7 +92,7 @@ export default function CoinBurst({ trigger, targetRef, onCollect }) {
         },
       });
     }
-  }, [trigger, targetRef, onCollect]);
+  }, [trigger, targetRef, onCollect, coinImg]);
 
   return (
     <div

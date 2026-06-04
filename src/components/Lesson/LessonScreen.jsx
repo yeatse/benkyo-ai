@@ -15,7 +15,7 @@ import LessonFailed from './LessonFailed';
 import ReviveSheet from './ReviveSheet';
 import CoinBurst from '../UI/CoinBurst';
 import { stopJapaneseSpeech } from '../../lib/japanese-speech-player';
-import coinImg from '../../assets/icons/item/coin.png';
+import { useIcon } from '../../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
@@ -27,6 +27,7 @@ export default function LessonScreen() {
   const chapters = useCourseStore(s => s.chapters);
   const inventory = useUserStore(s => s.inventory);
   const coins     = useUserStore(s => s.coins);
+  const coinImg = useIcon('item/coin.png');
   const enemyHpRef = useRef(null);
   const coinTargetRef = useRef(null);
   const lessonKeyRef = useRef('');

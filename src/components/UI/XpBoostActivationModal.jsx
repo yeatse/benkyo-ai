@@ -1,7 +1,6 @@
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
-import exp2Img from '../../assets/icons/item/exp2.png';
-import exp3Img from '../../assets/icons/item/exp3.png';
+import { useIcon } from '../../lib/icons';
 
 /**
  * XpBoostActivationModal — Full-screen celebration animation shown when
@@ -12,6 +11,8 @@ import exp3Img from '../../assets/icons/item/exp3.png';
  */
 export default function XpBoostActivationModal({ multiplier, onDismiss }) {
   const isDouble = multiplier === 2;
+  const exp2Img = useIcon('item/exp2.png');
+  const exp3Img = useIcon('item/exp3.png');
 
   const overlayRef   = useRef(null);
   const particleRef  = useRef(null); // container for JS-spawned particles

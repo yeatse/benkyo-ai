@@ -4,11 +4,12 @@ import gsap from 'gsap';
 import useAiStore from '../../store/aiStore';
 import { judgeAnswer } from '../../lib/judge-answer';
 import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
-import heartImg from '../../assets/icons/ui/heart.png';
-import correctFeedbackImg from '../../assets/icons/sd/sd2_corrent.png';
-import wrongFeedbackImg from '../../assets/icons/sd/sd2_wrong.png';
+import { useIcon } from '../../lib/icons';
 
 export default function FeedbackPanel({ feedbackState, question, userAnswer, correctAnswer, hint, onContinue, onOverturn, isReview }) {
+  const heartImg = useIcon('ui/heart.png');
+  const correctFeedbackImg = useIcon('sd/sd2_corrent.png');
+  const wrongFeedbackImg = useIcon('sd/sd2_wrong.png');
   const panelRef = useRef(null);
   const btnRef = useRef(null);
 

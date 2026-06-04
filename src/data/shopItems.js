@@ -1,7 +1,5 @@
-// Shared item definitions — used by ShopPage and BackpackSheet
-import exp2Img from '../assets/icons/item/exp2.png';
-import exp3Img from '../assets/icons/item/exp3.png';
-import cakeImg from '../assets/icons/item/cake.png';
+// Shared item definitions — used by ShopPage and BackpackSheet.
+// iconPath is resolved by src/lib/icons.js according to the active icon skin.
 
 export const SHOP_ITEMS = [
   {
@@ -10,7 +8,7 @@ export const SHOP_ITEMS = [
     subtitle: '15 分钟',
     desc: '提供双倍经验 15 分钟',
     icon: '⚡',
-    iconImg: exp2Img,
+    iconPath: 'item/exp2.png',
     iconBg: '#FEF9C3',
     color: '#CA8A04',
     badgeBg: 'linear-gradient(135deg, #FEF08A, #FDE047)',
@@ -23,7 +21,7 @@ export const SHOP_ITEMS = [
     subtitle: '15 分钟',
     desc: '提供三倍经验 15 分钟',
     icon: '🚀',
-    iconImg: exp3Img,
+    iconPath: 'item/exp3.png',
     iconBg: '#EDE9FE',
     color: '#7C3AED',
     badgeBg: 'linear-gradient(135deg, #C4B5FD, #A78BFA)',
@@ -36,7 +34,7 @@ export const SHOP_ITEMS = [
     subtitle: '',
     desc: '恢复 3 颗心',
     icon: '🎂',
-    iconImg: cakeImg,
+    iconPath: 'item/cake.png',
     iconBg: '#FCE7F3',
     color: '#DB2777',
     badgeBg: 'linear-gradient(135deg, #FBCFE8, #F9A8D4)',

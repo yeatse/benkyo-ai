@@ -9,16 +9,7 @@ import EditProfileSheet from '../components/Profile/EditProfileSheet';
 import BackpackSheet from '../components/Profile/BackpackSheet';
 import HeartDisplay from '../components/UI/HeartDisplay';
 import CheckInModal from '../components/UI/CheckInModal';
-import lvImg from '../assets/icons/ui/lv.png';
-import logoImg from '../assets/icons/logo.png';
-import lvUpImg from '../assets/icons/ui/level_up.png';
-import fireImg from '../assets/icons/ui/fire.png';
-import completedImg from '../assets/icons/ui/completed_levels.png';
-import collectStarImg from '../assets/icons/ui/collect_star.png';
-import bagImg from '../assets/icons/ui/bag.png';
-import checkInImg from '../assets/icons/ui/check_in.png';
-import settingImg from '../assets/icons/ui/setting.png';
-import coinImg from '../assets/icons/item/coin.png';
+import { useIcon } from '../lib/icons';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -26,6 +17,16 @@ export default function ProfilePage() {
   const coins = useUserStore(s => s.coins);
   const lastCheckIn = useUserStore(s => s.lastCheckIn);
   const checkIn = useUserStore(s => s.checkIn);
+  const lvImg = useIcon('ui/lv.png');
+  const logoImg = useIcon('logo.png');
+  const lvUpImg = useIcon('ui/level_up.png');
+  const fireImg = useIcon('ui/fire.png');
+  const completedImg = useIcon('ui/completed_levels.png');
+  const collectStarImg = useIcon('ui/collect_star.png');
+  const bagImg = useIcon('ui/bag.png');
+  const checkInImg = useIcon('ui/check_in.png');
+  const settingImg = useIcon('ui/setting.png');
+  const coinImg = useIcon('item/coin.png');
   const totalXp = useGameStore(s => s.totalXp);
   const levelProgress = useGameStore(s => s.levelProgress);
   const [showEdit, setShowEdit] = useState(false);

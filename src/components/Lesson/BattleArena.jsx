@@ -2,33 +2,28 @@ import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { MAX_HEARTS } from '../../store/userStore';
-import heartImg from '../../assets/icons/ui/heart.png';
-import heartYellowImg from '../../assets/icons/ui/heart_yellow.png';
-import playerIdleImg from '../../assets/icons/sd/sd2_battle_idle.png';
-import playerAttackImg from '../../assets/icons/sd/sd2_battle_attack.png';
-import playerDamagedImg from '../../assets/icons/sd/sd2_battle_damaged.png';
-import enemyIdleImg from '../../assets/icons/sd/sd2_enemy_idle.png';
-import enemyAttackImg from '../../assets/icons/sd/sd2_enemy_attack.png';
-import enemyDamagedImg from '../../assets/icons/sd/sd2_enemy_damaged.png';
+import { useIcon, useIconResolver } from '../../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
-const BATTLE_IMAGES = {
+const BATTLE_IMAGE_PATHS = {
   idle: {
-    player: playerIdleImg,
-    enemy: enemyIdleImg,
+    player: 'sd/sd2_battle_idle.png',
+    enemy: 'sd/sd2_enemy_idle.png',
   },
   correct: {
-    player: playerAttackImg,
-    enemy: enemyDamagedImg,
+    player: 'sd/sd2_battle_attack.png',
+    enemy: 'sd/sd2_enemy_damaged.png',
   },
   wrong: {
-    player: playerDamagedImg,
-    enemy: enemyAttackImg,
+    player: 'sd/sd2_battle_damaged.png',
+    enemy: 'sd/sd2_enemy_attack.png',
   },
 };
 
 function HeartRow({ hearts }) {
+  const heartImg = useIcon('ui/heart.png');
+  const heartYellowImg = useIcon('ui/heart_yellow.png');
   const totalSlots = Math.max(MAX_HEARTS, hearts);
 
   return (
@@ -58,7 +53,12 @@ function HeartRow({ hearts }) {
 }
 
 export default function BattleArena({ battleState = 'idle', hearts, enemyHp, enemyHpRef, shouldSlide = true }) {
-  const images = BATTLE_IMAGES[battleState] ?? BATTLE_IMAGES.idle;
+  const resolveIcon = useIconResolver();
+  const imagePaths = BATTLE_IMAGE_PATHS[battleState] ?? BATTLE_IMAGE_PATHS.idle;
+  const images = {
+    player: resolveIcon(imagePaths.player),
+    enemy: resolveIcon(imagePaths.enemy),
+  };
   const playerPositionRef = useRef(null);
   const enemyPositionRef = useRef(null);
 

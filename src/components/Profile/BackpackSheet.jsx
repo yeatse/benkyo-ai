@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import useUserStore, { MAX_HEARTS } from '../../store/userStore';
 import { SHOP_ITEMS } from '../../data/shopItems';
 import XpBoostActivationModal from '../UI/XpBoostActivationModal';
-import bagImg from '../../assets/icons/ui/bag.png';
+import { useIcon, useIconResolver } from '../../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
@@ -14,6 +14,8 @@ export default function BackpackSheet({ onClose }) {
   const xpBoost     = useUserStore(s => s.xpBoost);
   const consumeCake    = useUserStore(s => s.useCake);
   const activateXpCard = useUserStore(s => s.useXpCard);
+  const bagImg = useIcon('ui/bag.png');
+  const resolveIcon = useIconResolver();
 
   // Activation modal: null | 2 | 3
   const [activationMultiplier, setActivationMultiplier] = useState(null);
@@ -140,6 +142,7 @@ export default function BackpackSheet({ onClose }) {
         {/* Item list */}
         <div style={{ overflowY: 'auto', padding: '0 16px 32px', flex: 1 }}>
           {SHOP_ITEMS.map((item) => {
+            const itemImg = resolveIcon(item.iconPath);
             const count = inventory?.[item.id] ?? 0;
             const disabled = isDisabled(item);
             const btn = btnConfig(item);
@@ -170,7 +173,7 @@ export default function BackpackSheet({ onClose }) {
                     position: 'relative',
                   }}
                 >
-                  <img src={item.iconImg} alt={item.name} width={32} height={32} style={{ objectFit: 'contain' }} />
+                  <img src={itemImg} alt={item.name} width={32} height={32} style={{ objectFit: 'contain' }} />
                   {/* Count badge */}
                   <div
                     style={{

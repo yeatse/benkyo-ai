@@ -5,8 +5,7 @@ import useCourseStore from '../../store/courseStore';
 import useAiStore from '../../store/aiStore';
 import useUserStore from '../../store/userStore';
 import { generateFirstChapter } from '../../lib/generate-chapter';
-import sdGenerateImg from '../../assets/icons/sd/sd_generate.png';
-import sdErrorImg from '../../assets/icons/sd/sd2_error.png';
+import { useIcon } from '../../lib/icons';
 import EstimatedProgressBar from '../UI/EstimatedProgressBar';
 
 gsap.registerPlugin(useGSAP);
@@ -692,6 +691,8 @@ function TextareaField({ placeholder, value, onChange }) {
 // ─── Generating content ────────────────────────────────────────────────────────
 
 function GeneratingContent({ genStep, genMsg, genProgress }) {
+  const sdGenerateImg = useIcon('sd/sd_generate.png');
+
   return (
     <div style={{ textAlign: 'center', padding: '20px 0 10px' }}>
       {/* Pulsing mascot */}
@@ -757,6 +758,8 @@ function GeneratingContent({ genStep, genMsg, genProgress }) {
 // ─── Error content ─────────────────────────────────────────────────────────────
 
 function ErrorContent({ error, onRetry, onClose }) {
+  const sdErrorImg = useIcon('sd/sd2_error.png');
+
   return (
     <div style={{ textAlign: 'center', padding: '20px 0 10px' }}>
       <img src={sdErrorImg} alt="课程生成失败" width={132} height={132} style={{ display: 'block', objectFit: 'contain', margin: '0 auto 16px' }} />

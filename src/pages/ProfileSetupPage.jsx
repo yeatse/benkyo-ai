@@ -4,12 +4,13 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useUserStore from '../store/userStore';
 import AvatarCropper from '../components/Profile/AvatarCropper';
-import logoImg from '../assets/icons/logo.png';
 import { applyTheme } from '../lib/theme';
+import { useIcon } from '../lib/icons';
 
 export default function ProfileSetupPage() {
   const navigate = useNavigate();
   const setProfile = useUserStore(s => s.setProfile);
+  const logoImg = useIcon('logo.png');
 
   const [nickname, setNickname] = useState('');
   const [gender, setGender] = useState(null);

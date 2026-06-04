@@ -1,14 +1,15 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { generateText } from 'ai';
 import useAiStore, { PROVIDER_PRESETS } from '../store/aiStore';
 import useTtsStore, { TTS_PROVIDER_PRESETS } from '../store/ttsStore';
+import useAppearanceStore, { DEFAULT_ICON_SKIN, ICON_SKINS, isIconSkin } from '../store/appearanceStore';
 import { getModel } from '../lib/ai-providers';
 import { getAiErrorContent, logAiGeneratedContent } from '../lib/ai-debug';
 import { requestTtsAudioBlob } from '../lib/tts';
-import settingImg from '../assets/icons/ui/setting.png';
+import { useIcon } from '../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
@@ -70,6 +71,10 @@ export default function SettingsPage() {
   const setThinkingDepthStore = useAiStore(s => s.setThinkingDepth);
   const savedTtsConfig = useTtsStore(s => s.getConfig)();
   const setTtsConfigStore = useTtsStore(s => s.setConfig);
+  const iconSkin = useAppearanceStore(s => s.iconSkin);
+  const setIconSkin = useAppearanceStore(s => s.setIconSkin);
+  const settingImg = useIcon('ui/setting.png');
+  const activeIconSkin = isIconSkin(iconSkin) ? iconSkin : DEFAULT_ICON_SKIN;
 
   const [provider, setProvider] = useState(savedConfig.provider || 'openai');
   const [apiKey, setApiKey] = useState(savedConfig.apiKey || '');
@@ -85,10 +90,8 @@ export default function SettingsPage() {
 
   const [testStatus, setTestStatus] = useState(null); // null | 'loading' | 'ok' | 'error'
   const [testMessage, setTestMessage] = useState('');
-  const [saveFlash, setSaveFlash] = useState(false);
   const [ttsTestStatus, setTtsTestStatus] = useState(null); // null | 'loading' | 'ok' | 'error'
   const [ttsTestMessage, setTtsTestMessage] = useState('');
-  const [ttsSaveFlash, setTtsSaveFlash] = useState(false);
 
   const pageRef = useRef(null);
   const backBtnRef = useRef(null);
@@ -103,6 +106,25 @@ export default function SettingsPage() {
   }, []);
 
   const currentPreset = PROVIDER_PRESETS[provider];
+
+  useEffect(() => {
+    setConfig({
+      provider,
+      apiKey: apiKey.trim(),
+      modelId: modelId.trim(),
+      baseUrl: baseUrl.trim(),
+    });
+  }, [provider, apiKey, modelId, baseUrl, setConfig]);
+
+  useEffect(() => {
+    setTtsConfigStore({
+      provider: ttsProvider,
+      baseUrl: ttsBaseUrl.trim(),
+      modelId: ttsModelId.trim(),
+      apiKey: ttsApiKey.trim(),
+      voice: ttsVoice.trim(),
+    });
+  }, [ttsProvider, ttsBaseUrl, ttsModelId, ttsApiKey, ttsVoice, setTtsConfigStore]);
 
   function handleTtsProviderChange(newProvider) {
     setTtsProvider(newProvider);
@@ -199,17 +221,6 @@ export default function SettingsPage() {
     }
   }
 
-  function handleSave() {
-    setConfig({
-      provider,
-      apiKey: apiKey.trim(),
-      modelId: modelId.trim(),
-      baseUrl: baseUrl.trim(),
-    });
-    setSaveFlash(true);
-    setTimeout(() => setSaveFlash(false), 1500);
-  }
-
   async function handleTtsTest() {
     setTtsTestStatus('loading');
     setTtsTestMessage('');
@@ -284,18 +295,6 @@ export default function SettingsPage() {
     }
   }
 
-  function handleTtsSave() {
-    setTtsConfigStore({
-      provider: ttsProvider,
-      baseUrl: ttsBaseUrl.trim(),
-      modelId: ttsModelId.trim(),
-      apiKey: ttsApiKey.trim(),
-      voice: ttsVoice.trim(),
-    });
-    setTtsSaveFlash(true);
-    setTimeout(() => setTtsSaveFlash(false), 1500);
-  }
-
   const showRequiredHint = provider === 'openai-compatible';
 
   return (
@@ -332,6 +331,43 @@ export default function SettingsPage() {
 
       {/* Content */}
       <div ref={pageRef} style={{ padding: '20px 16px 40px' }}>
+
+        {/* Appearance Section */}
+        <div style={{ marginBottom: 8 }}>
+          <h2 style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+            界面皮肤
+          </h2>
+        </div>
+
+        <div className="bg-white rounded-2xl" style={{ padding: '20px 16px', boxShadow: '0 4px 24px rgba(91,79,233,0.10)', marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 8 }}>
+            图标组
+          </label>
+          <div style={{
+            position: 'relative',
+            background: '#F9FAFB',
+            borderRadius: 12,
+            border: '1.5px solid #E5E7EB',
+          }}>
+            <select
+              value={activeIconSkin}
+              onChange={e => setIconSkin(e.target.value)}
+              style={{
+                width: '100%', padding: '11px 14px',
+                background: 'transparent', border: 'none', outline: 'none',
+                fontSize: 14, fontWeight: 600, color: '#1E1B4B',
+                cursor: 'pointer', appearance: 'none',
+              }}
+            >
+              {ICON_SKINS.map(opt => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}{opt.isDefault ? '（默认）' : ''}
+                </option>
+              ))}
+            </select>
+            <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: 12, color: '#9CA3AF' }}>▼</span>
+          </div>
+        </div>
 
         {/* AI Model Section */}
         <div style={{ marginBottom: 8 }}>
@@ -482,22 +518,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Save Button */}
-          <button
-            onClick={handleSave}
-            className="btn-press"
-            style={{
-              width: '100%', padding: '12px 0',
-              borderRadius: 14, border: 'none',
-              background: saveFlash ? '#22C55E' : '#1E1B4B',
-              color: 'white',
-              fontSize: 14, fontWeight: 800,
-              cursor: 'pointer',
-              transition: 'background 0.3s',
-            }}
-          >
-            {saveFlash ? '✅ 已保存！' : '💾 保存 LLM 配置'}
-          </button>
         </div>
 
         {/* TTS Section */}
@@ -671,22 +691,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* TTS Save Button */}
-          <button
-            onClick={handleTtsSave}
-            className="btn-press"
-            style={{
-              width: '100%', padding: '12px 0',
-              borderRadius: 14, border: 'none',
-              background: ttsSaveFlash ? '#22C55E' : '#1E1B4B',
-              color: 'white',
-              fontSize: 14, fontWeight: 800,
-              cursor: 'pointer',
-              transition: 'background 0.3s',
-            }}
-          >
-            {ttsSaveFlash ? '✅ 已保存！' : '💾 保存 TTS 配置'}
-          </button>
         </div>
 
         {/* Thinking Depth Section */}

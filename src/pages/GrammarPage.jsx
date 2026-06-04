@@ -4,7 +4,7 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useCourseStore from '../store/courseStore';
 import JapaneseSpeechButton from '../components/UI/JapaneseSpeechButton';
-import sdLearnImg from '../assets/icons/sd/sd_learn.png';
+import { useIcon } from '../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
@@ -282,6 +282,7 @@ function Section({ section, chapterColor }) {
 export default function GrammarPage() {
   const { chapterId } = useParams();
   const navigate      = useNavigate();
+  const sdLearnImg    = useIcon('sd/sd_learn.png');
   const contentRef    = useRef(null);
   const chapters      = useCourseStore(s => s.chapters);
 

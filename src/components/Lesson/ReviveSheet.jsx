@@ -4,9 +4,7 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useGameStore from '../../store/gameStore';
 import useUserStore from '../../store/userStore';
-import cakeImg from '../../assets/icons/item/cake.png';
-import coinImg from '../../assets/icons/item/coin.png';
-import sdCakeImg from '../../assets/icons/sd/sd_cake.png';
+import { useIcon } from '../../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
@@ -18,6 +16,9 @@ export default function ReviveSheet({ hasCake, cakeCount, canBuyCake, coins }) {
   const exitLesson   = useGameStore(s => s.exitLesson);
   const consumeCake  = useUserStore(s => s.useCake);
   const purchaseItem = useUserStore(s => s.purchaseItem);
+  const cakeImg = useIcon('item/cake.png');
+  const coinImg = useIcon('item/coin.png');
+  const sdCakeImg = useIcon('sd/sd_cake.png');
 
   const iconRef  = useRef(null);
   const cardRef  = useRef(null);

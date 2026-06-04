@@ -3,10 +3,11 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useUserStore from '../../store/userStore';
 import AvatarCropper from './AvatarCropper';
-import logoImg from '../../assets/icons/logo.png';
+import { useIcon } from '../../lib/icons';
 
 export default function EditProfileSheet({ onClose }) {
   const { profile, updateProfile } = useUserStore();
+  const logoImg = useIcon('logo.png');
 
   const [nickname, setNickname] = useState(profile?.nickname ?? '');
   const [gender, setGender] = useState(profile?.gender ?? null);

@@ -14,8 +14,7 @@ import CreateCourseSheet from './CreateCourseSheet';
 import GenerateNextChapterSheet from './GenerateNextChapterSheet';
 import { generateLevelQuestions } from '../../lib/generate-chapter';
 import EstimatedProgressBar from '../UI/EstimatedProgressBar';
-import sdNoBooksImg from '../../assets/icons/sd/sd_no_books.png';
-import sdFallImg from '../../assets/icons/sd/sd_fall.png';
+import { useIcon } from '../../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
@@ -336,6 +335,7 @@ function LevelInfoSheet({ info, onClose, onEnter, onGenerate, isAutoGenerating, 
 
 // ── No-AI-Config Modal ──────────────────────────────────────────────────────
 function NoAiConfigModal({ onClose, onGoSettings }) {
+  const sdFallImg = useIcon('sd/sd_fall.png');
   const overlayRef = useRef(null);
   const sheetRef = useRef(null);
 
@@ -415,6 +415,7 @@ function NoAiConfigModal({ onClose, onGoSettings }) {
 
 export default function LevelMap() {
   const navigate = useNavigate();
+  const sdNoBooksImg = useIcon('sd/sd_no_books.png');
   const levelProgress = useGameStore(s => s.levelProgress);
   const { nextHeartAt, syncHearts } = useUserStore();
   const chapters = useCourseStore(s => s.chapters);

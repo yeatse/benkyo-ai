@@ -4,15 +4,16 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useGameStore from '../../store/gameStore';
 import LevelUpModal from './LevelUpModal';
-import heartImg from '../../assets/icons/ui/heart.png';
-import lvUpImg from '../../assets/icons/ui/level_up.png';
-import coinImg from '../../assets/icons/item/coin.png';
-import sdCompleteImg from '../../assets/icons/sd/sd_complete.png';
 import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
+import { useIcon } from '../../lib/icons';
 
 export default function LessonComplete() {
   const navigate = useNavigate();
   const { lesson, exitLesson, totalXp } = useGameStore();
+  const heartImg = useIcon('ui/heart.png');
+  const lvUpImg = useIcon('ui/level_up.png');
+  const coinImg = useIcon('item/coin.png');
+  const sdCompleteImg = useIcon('sd/sd_complete.png');
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [displayCoins, setDisplayCoins] = useState(0);
   const coinsProxy = useRef({ value: 0 });

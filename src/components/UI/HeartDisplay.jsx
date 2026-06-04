@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import useUserStore, { MAX_HEARTS } from '../../store/userStore';
-import heartImg from '../../assets/icons/ui/heart.png';
-import heartYellowImg from '../../assets/icons/ui/heart_yellow.png';
+import { useIcon } from '../../lib/icons';
 
 /**
  * HeartDisplay — shows ❤️ count + countdown timer for next regen.
@@ -9,6 +8,8 @@ import heartYellowImg from '../../assets/icons/ui/heart_yellow.png';
  */
 export default function HeartDisplay({ size = 'md' }) {
   const { hearts, nextHeartAt, syncHearts } = useUserStore();
+  const heartImg = useIcon('ui/heart.png');
+  const heartYellowImg = useIcon('ui/heart_yellow.png');
   const [, tick] = useState(0);
 
   // Sync regen on mount and tick the countdown every second

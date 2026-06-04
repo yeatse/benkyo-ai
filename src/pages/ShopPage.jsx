@@ -3,10 +3,7 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useUserStore from '../store/userStore';
 import { SHOP_ITEMS } from '../data/shopItems';
-import bagImg from '../assets/icons/ui/bag.png';
-import cartImg from '../assets/icons/ui/shopping_cart.png';
-import coinImg from '../assets/icons/item/coin.png';
-import sdShoppingImg from '../assets/icons/sd/sd_shopping.png';
+import { useIcon, useIconResolver } from '../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
@@ -24,6 +21,11 @@ export default function ShopPage() {
   const coins = useUserStore(s => s.coins);
   const purchaseItem = useUserStore(s => s.purchaseItem);
   const inventory = useUserStore(s => s.inventory);
+  const bagImg = useIcon('ui/bag.png');
+  const cartImg = useIcon('ui/shopping_cart.png');
+  const coinImg = useIcon('item/coin.png');
+  const sdShoppingImg = useIcon('sd/sd_shopping.png');
+  const resolveIcon = useIconResolver();
   const [flash, triggerFlash] = useFlash();
 
   const headerRef = useRef(null);
@@ -129,6 +131,7 @@ export default function ShopPage() {
       {/* Item list */}
       <div ref={listRef} style={{ margin: '-20px 16px 28px', position: 'relative' }}>
         {SHOP_ITEMS.map((item) => {
+          const itemImg = resolveIcon(item.iconPath);
           const owned = inventory?.[item.id] ?? 0;
           const canAfford = coins >= item.price;
           const f = flash[item.id];
@@ -156,7 +159,7 @@ export default function ShopPage() {
                   fontSize: 28, flexShrink: 0,
                 }}
               >
-                <img src={item.iconImg} alt={item.name} width={36} height={36} style={{ objectFit: 'contain' }} />
+                <img src={itemImg} alt={item.name} width={36} height={36} style={{ objectFit: 'contain' }} />
               </div>
 
               {/* Info */}

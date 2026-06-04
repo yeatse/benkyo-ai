@@ -1,7 +1,6 @@
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
-import coinImg from '../../assets/icons/item/coin.png';
-import sdCheckInImg from '../../assets/icons/sd/sd_check_in.png';
+import { useIcon } from '../../lib/icons';
 import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
 
 /**
@@ -11,6 +10,8 @@ import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
  *   onDismiss: () => void
  */
 export default function CheckInModal({ coins, onDismiss }) {
+  const coinImg = useIcon('item/coin.png');
+  const sdCheckInImg = useIcon('sd/sd_check_in.png');
   const overlayRef  = useRef(null);
   const cardRef     = useRef(null);
   const coinIconRef = useRef(null);

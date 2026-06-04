@@ -2,13 +2,14 @@ import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
-import bookImg from '../../assets/icons/ui/book.png';
+import { useIcon } from '../../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
 export default function ChapterBanner({ chapter }) {
   const [fromColor, toColor] = chapter.gradient;
   const navigate = useNavigate();
+  const bookImg = useIcon('ui/book.png');
   const hasGrammar = !!chapter.grammar;
 
   const c1 = useRef(null);

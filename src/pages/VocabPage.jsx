@@ -5,8 +5,7 @@ import useVocabStore from '../store/vocabStore';
 import RubyText from '../components/UI/RubyText';
 import JapaneseSpeechButton from '../components/UI/JapaneseSpeechButton';
 import { toKanaReading } from '../lib/japanese-text';
-import bookImg from '../assets/icons/ui/book.png';
-import sdNoBooksImg from '../assets/icons/sd/sd_no_books.png';
+import { useIcon } from '../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
@@ -18,6 +17,8 @@ const SORT_OPTIONS = [
 
 export default function VocabPage() {
   const words = useVocabStore(s => s.words);
+  const bookImg = useIcon('ui/book.png');
+  const sdNoBooksImg = useIcon('sd/sd_no_books.png');
   const [sort, setSort] = useState('newest');
 
   const headerRef = useRef(null);

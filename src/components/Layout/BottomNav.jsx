@@ -1,21 +1,13 @@
 import { useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import gsap from 'gsap';
-
-import homeOff from '../../assets/icons/nav/home_1.png';
-import homeOn  from '../../assets/icons/nav/home_2.png';
-import shopOff from '../../assets/icons/nav/shop_1.png';
-import shopOn  from '../../assets/icons/nav/shop_2.png';
-import vocabOff from '../../assets/icons/nav/vocabulary_1.png';
-import vocabOn  from '../../assets/icons/nav/vocabulary_2.png';
-import myOff from '../../assets/icons/nav/my_1.png';
-import myOn  from '../../assets/icons/nav/my_2.png';
+import { useIconResolver } from '../../lib/icons';
 
 const TABS = [
-  { path: '/',        label: '首页',  iconOff: homeOff,  iconOn: homeOn  },
-  { path: '/shop',    label: '商店',  iconOff: shopOff,  iconOn: shopOn  },
-  { path: '/vocab',   label: '单词本', iconOff: vocabOff, iconOn: vocabOn },
-  { path: '/profile', label: '我的',  iconOff: myOff,    iconOn: myOn    },
+  { path: '/',        label: '首页',  iconOff: 'nav/home_1.png',       iconOn: 'nav/home_2.png'       },
+  { path: '/shop',    label: '商店',  iconOff: 'nav/shop_1.png',       iconOn: 'nav/shop_2.png'       },
+  { path: '/vocab',   label: '单词本', iconOff: 'nav/vocabulary_1.png', iconOn: 'nav/vocabulary_2.png' },
+  { path: '/profile', label: '我的',  iconOff: 'nav/my_1.png',         iconOn: 'nav/my_2.png'         },
 ];
 
 const INDICATOR_W = 40;
@@ -23,6 +15,7 @@ const INDICATOR_W = 40;
 export default function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const resolveIcon = useIconResolver();
   const navRef = useRef(null);
   const indicatorRef = useRef(null);
   const tabRefs = useRef([]);
@@ -92,7 +85,7 @@ export default function BottomNav() {
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <img
-              src={isActive ? tab.iconOn : tab.iconOff}
+              src={resolveIcon(isActive ? tab.iconOn : tab.iconOff)}
               alt={tab.label}
               width={56}
               height={56}

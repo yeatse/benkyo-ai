@@ -4,15 +4,16 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useGameStore from '../../store/gameStore';
 import HeartDisplay from '../UI/HeartDisplay';
-import lvUpImg from '../../assets/icons/ui/level_up.png';
-import coinImg from '../../assets/icons/item/coin.png';
-import sdFailedImg from '../../assets/icons/sd/sd_failed.png';
+import { useIcon } from '../../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
 export default function LessonFailed() {
   const navigate = useNavigate();
   const { lesson, exitLesson } = useGameStore();
+  const lvUpImg = useIcon('ui/level_up.png');
+  const coinImg = useIcon('item/coin.png');
+  const sdFailedImg = useIcon('sd/sd_failed.png');
 
   const { finalXp = 0, finalCoins = 0, correctCount = 0, questions = [] } = lesson ?? {};
   const total = questions.length;
