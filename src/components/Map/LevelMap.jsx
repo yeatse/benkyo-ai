@@ -131,6 +131,8 @@ function NoHeartsModal({ nextHeartAt, onClose }) {
 function LevelInfoSheet({ info, onClose, onEnter, onGenerate, isAutoGenerating, autoGenMsg, autoGenProgress }) {
   const sheetRef   = useRef(null);
   const overlayRef = useRef(null);
+  const completedLevelsImg = useIcon('ui/completed_levels.png');
+  const levelUpImg = useIcon('ui/level_up.png');
   const [generating, setGenerating] = useState(false);
   const [genMsg,     setGenMsg]     = useState('');
   const [genProgress, setGenProgress] = useState(0);
@@ -281,7 +283,13 @@ function LevelInfoSheet({ info, onClose, onEnter, onGenerate, isAutoGenerating, 
                 padding: '14px 10px',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
               }}>
-                <span style={{ fontSize: 22 }}>📝</span>
+                <img
+                  src={completedLevelsImg}
+                  alt=""
+                  width={28}
+                  height={28}
+                  style={{ objectFit: 'contain' }}
+                />
                 {hasQuestions
                   ? <span style={{ fontSize: 20, fontWeight: 900, color: '#1E1B4B' }}>{displayQCount}</span>
                   : <span style={{ fontSize: 14, fontWeight: 800, color: chapterColor }}>AI 生成</span>
@@ -293,7 +301,13 @@ function LevelInfoSheet({ info, onClose, onEnter, onGenerate, isAutoGenerating, 
                 padding: '14px 10px',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
               }}>
-                <span style={{ fontSize: 22 }}>⭐</span>
+                <img
+                  src={levelUpImg}
+                  alt=""
+                  width={28}
+                  height={28}
+                  style={{ objectFit: 'contain' }}
+                />
                 <span style={{ fontSize: 20, fontWeight: 900, color: '#1E1B4B' }}>60</span>
                 <span style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF' }}>XP 奖励</span>
               </div>

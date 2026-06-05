@@ -13,7 +13,7 @@ const useTtsStore = create(
     (set, get) => ({
       provider: 'aliyun-cosyvoice',
       baseUrl: TTS_PROVIDER_PRESETS['aliyun-cosyvoice'].baseUrl,
-      modelId: 'cosyvoice-v3.5-flash',
+      modelId: 'cosyvoice-v3-flash',
       apiKey: '',
       voice: 'loongriko_v3',
 

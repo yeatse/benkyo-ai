@@ -17,6 +17,11 @@ const recordDailyTaskEvent = (eventType, amount) => {
   useDailyTaskStore.getState().recordEvent(eventType, amount);
 };
 
+const getActiveXpMultiplier = () => {
+  const boost = useUserStore.getState().xpBoost;
+  return (boost && Date.now() < boost.expiresAt) ? boost.multiplier : 1;
+};
+
 const findLevel = (chapterId, levelId) => {
   const chapters = useCourseStore.getState().chapters;
   const chapter = chapters.find(c => c.id === chapterId);
@@ -246,8 +251,7 @@ const useGameStore = create(
           const stars = wrongCount === 0 ? 3 : wrongCount === 1 ? 2 : 1;
 
           // Apply active XP boost (card must still be valid at settlement time)
-          const boost = useUserStore.getState().xpBoost;
-          const boostMult = (boost && Date.now() < boost.expiresAt) ? boost.multiplier : 1;
+          const boostMult = getActiveXpMultiplier();
           const xp = Math.round(BASE_XP * stars * boostMult);
 
           // Perfect clear bonus: +10 coins
@@ -394,7 +398,9 @@ const useGameStore = create(
       },
 
       awardPracticeXp(amount) {
-        const xp = Math.max(0, Number(amount) || 0);
+        const baseXp = Math.max(0, Number(amount) || 0);
+        const boostMult = getActiveXpMultiplier();
+        const xp = Math.round(baseXp * boostMult);
         const { totalXp } = get();
         const oldLevel = computeLevel(totalXp);
         const newTotalXp = totalXp + xp;
@@ -403,6 +409,9 @@ const useGameStore = create(
         set({ totalXp: newTotalXp });
         recordDailyTaskEvent(DAILY_TASK_EVENTS.XP_EARNED, xp);
         return {
+          xp,
+          baseXp,
+          multiplier: boostMult,
           totalXp: newTotalXp,
           oldLevel,
           newLevel,

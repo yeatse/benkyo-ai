@@ -266,16 +266,16 @@ const LEVEL_LABELS = {
   advanced:    '高阶强化（通过能力考试后继续提升自然表达和语感）',
 };
 const PACE_LABELS = {
-  relaxed:    '轻松随意（每章 2 个新语法，4 节课反复巩固）',
-  steady:     '稳步推进（每章 2 个新语法，5 节课循序渐进）',
-  fast:       '快速入门（每章 3 个新语法，6 节课练习巩固）',
+  relaxed:    '轻松随意（每章 1 个新语法，5 节课反复巩固）',
+  steady:     '稳步推进（每章 2 个新语法，6 节课循序渐进）',
+  fast:       '快速入门（每章 3 个新语法，7 节课练习巩固）',
   intensive:  '密集冲刺（每章 4 个新语法，8 节课密集训练）',
 };
 const DEFAULT_PACE = 'steady';
 const CURRICULUM_PACE_PLANS = {
-  relaxed:   { label: '轻松随意', grammarPointCount: 2, levelCount: 4 },
-  steady:    { label: '稳步推进', grammarPointCount: 2, levelCount: 5 },
-  fast:      { label: '快速入门', grammarPointCount: 3, levelCount: 6 },
+  relaxed:   { label: '轻松随意', grammarPointCount: 1, levelCount: 5 },
+  steady:    { label: '稳步推进', grammarPointCount: 2, levelCount: 6 },
+  fast:      { label: '快速入门', grammarPointCount: 3, levelCount: 7 },
   intensive: { label: '密集冲刺', grammarPointCount: 4, levelCount: 8 },
 };
 const PURPOSE_LABELS = {

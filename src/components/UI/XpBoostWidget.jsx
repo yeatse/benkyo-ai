@@ -152,7 +152,7 @@ export default function XpBoostWidget() {
             color: isDouble ? '#B45309' : '#7C3AED',
             fontVariantNumeric: 'tabular-nums',
           }}>
-            ⏳ {countdown}
+            {countdown}
           </div>
         </div>
       </div>

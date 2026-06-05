@@ -5,7 +5,6 @@ import RubyText from '../UI/RubyText';
 import JapaneseSpeechButton from '../UI/JapaneseSpeechButton';
 import { playSavedJapaneseSpeech } from '../../lib/japanese-speech-player';
 import { toKanaReading } from '../../lib/japanese-text';
-import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
 
 gsap.registerPlugin(useGSAP);
 
@@ -31,12 +30,6 @@ export default function WordReviewQuestion({ question, onAnswer, feedbackState, 
     if (feedbackState !== null || locked) return;
     const answer = isJapaneseAnswer ? option.jp : option.cn;
     setLocked(true);
-
-    playSoundEffect(
-      answer === question.correctAnswer
-        ? SOUND_EFFECT_TYPES.ANSWER_CORRECT
-        : SOUND_EFFECT_TYPES.ANSWER_WRONG
-    );
 
     void playSavedJapaneseSpeech(toKanaReading(question.word.jp, question.word.ruby)).catch(() => {});
 

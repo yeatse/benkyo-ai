@@ -148,7 +148,8 @@ function GrammarRuleSection({ section }) {
             <div key={i} style={{
               background: i === 0 ? '#FAFAFA' : 'white',
               border: '1.5px solid #F3F4F6',
-              borderRadius: 12, padding: '11px 14px',
+              borderRadius: 12,
+              padding: ex.note ? '11px 14px 28px' : '11px 14px',
               position: 'relative',
               display: 'flex', alignItems: 'flex-start', gap: 10,
             }}>
@@ -159,7 +160,7 @@ function GrammarRuleSection({ section }) {
               <div style={{ flex: 1, minWidth: 0 }}>
               {ex.note && (
                 <span style={{
-                  position: 'absolute', top: 8, right: 10,
+                  position: 'absolute', right: 10, bottom: 8,
                   fontSize: 10, fontWeight: 700,
                   background: 'var(--tp-lite)', color: 'var(--tp-deep)',
                   borderRadius: 6, padding: '1px 7px',
@@ -212,22 +213,36 @@ function VocabularySection({ section }) {
             <div key={i} style={{
               background: '#FAFAFA',
               border: '1.5px solid #F3F4F6',
-              borderRadius: 14, padding: '12px 12px 10px',
-              display: 'flex', alignItems: 'flex-start', gap: 8,
+              borderRadius: 14,
+              padding: '10px 12px 8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
             }}>
-              <JapaneseSpeechButton text={w.jp} spokenText={w.kana || w.jp} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-              {/* Kana */}
-              <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 500, minHeight: 16 }}>
-                {sameAsKana ? '' : w.kana}
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 8,
+              }}>
+                <div style={{ marginTop: 7, flexShrink: 0 }}>
+                  <JapaneseSpeechButton text={w.jp} spokenText={w.kana || w.jp} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                {/* Kana */}
+                <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 500, minHeight: 16 }}>
+                  {sameAsKana ? '' : w.kana}
+                </div>
+                {/* Kanji */}
+                <div style={{ fontSize: 22, fontWeight: 900, color: '#1E1B4B', lineHeight: 1.2 }}>
+                  {w.jp}
+                </div>
+                {/* Chinese */}
+                <div style={{ fontSize: 13, color: '#4B5563', fontWeight: 600, marginTop: 2 }}>
+                  {w.cn}
+                </div>
+                </div>
               </div>
-              {/* Kanji */}
-              <div style={{ fontSize: 22, fontWeight: 900, color: '#1E1B4B', lineHeight: 1.2 }}>
-                {w.jp}
-              </div>
-              {/* Chinese + POS */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                <span style={{ fontSize: 13, color: '#4B5563', fontWeight: 600 }}>{w.cn}</span>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', minHeight: 14 }}>
                 <span style={{
                   fontSize: 9, fontWeight: 800,
                   background: posStyle.bg, color: posStyle.color,
@@ -235,7 +250,6 @@ function VocabularySection({ section }) {
                 }}>
                   {w.pos}
                 </span>
-              </div>
               </div>
             </div>
           );

@@ -82,7 +82,7 @@ const TASK_POOLS = {
     },
     {
       id: 'cake-1',
-      title: '使用1个蛋糕',
+      title: '吃掉1个蛋糕',
       event: DAILY_TASK_EVENTS.CAKE_USED,
       target: 1,
     },
