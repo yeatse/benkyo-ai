@@ -6,7 +6,7 @@ import { useIconResolver } from '../../lib/icons';
 const TABS = [
   { path: '/',        label: '首页',  iconOff: 'nav/home_1.png',       iconOn: 'nav/home_2.png'       },
   { path: '/shop',    label: '商店',  iconOff: 'nav/shop_1.png',       iconOn: 'nav/shop_2.png'       },
-  { path: '/vocab',   label: '单词本', iconOff: 'nav/vocabulary_1.png', iconOn: 'nav/vocabulary_2.png' },
+  { path: '/vocab',   label: '练习',  iconOff: 'nav/vocabulary_1.png', iconOn: 'nav/vocabulary_2.png' },
   { path: '/profile', label: '我的',  iconOff: 'nav/my_1.png',         iconOn: 'nav/my_2.png'         },
 ];
 
@@ -21,7 +21,11 @@ export default function BottomNav() {
   const tabRefs = useRef([]);
   const initialized = useRef(false);
 
-  const activeIdx = Math.max(0, TABS.findIndex(t => t.path === location.pathname));
+  const activeIdx = Math.max(0, TABS.findIndex(t => (
+    t.path === '/'
+      ? location.pathname === '/'
+      : location.pathname === t.path || location.pathname.startsWith(`${t.path}/`)
+  )));
 
   useEffect(() => {
     const nav = navRef.current;

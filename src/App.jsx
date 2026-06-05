@@ -9,6 +9,7 @@ import ProfilePage from './pages/ProfilePage';
 import ShopPage from './pages/ShopPage';
 import SettingsPage from './pages/SettingsPage';
 import VocabPage from './pages/VocabPage';
+import VocabBookPage from './pages/VocabBookPage';
 import MainLayout from './components/Layout/MainLayout';
 import useUserStore from './store/userStore';
 import XpBoostWidget from './components/UI/XpBoostWidget';
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/vocab" element={<VocabPage />} />
+            <Route path="/vocab/book" element={<VocabBookPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
           <Route path="/lesson/:chapterId/:levelId" element={<LessonPage />} />

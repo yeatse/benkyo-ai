@@ -1,211 +1,259 @@
-import { useState, useMemo, useRef } from 'react';
+import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useVocabStore from '../store/vocabStore';
-import RubyText from '../components/UI/RubyText';
-import JapaneseSpeechButton from '../components/UI/JapaneseSpeechButton';
-import { toKanaReading } from '../lib/japanese-text';
 import { useIcon } from '../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
-const SORT_OPTIONS = [
-  { id: 'newest', label: '由新到旧' },
-  { id: 'oldest', label: '由旧到新' },
-  { id: 'gojuon', label: '五十音' },
+const PRACTICE_ENTRIES = [
+  {
+    id: 'listening',
+    label: '听力练习',
+    desc: '日语听辨训练',
+    icon: 'sd/sd_lc_listening.png',
+  },
+  {
+    id: 'course-review',
+    label: '课程巩固',
+    desc: '复习已学关卡',
+    icon: 'sd/sd_learn.png',
+  },
+  {
+    id: 'word-review',
+    label: '单词复习',
+    desc: '强化词汇记忆',
+    icon: 'sd/sd_lc_word.png',
+  },
+  {
+    id: 'mistakes',
+    label: '错题重练',
+    desc: '回看薄弱题目',
+    icon: 'sd/sd_lc_incorrect.png',
+  },
 ];
 
 export default function VocabPage() {
   const words = useVocabStore(s => s.words);
+  const navigate = useNavigate();
   const bookImg = useIcon('ui/book.png');
-  const sdNoBooksImg = useIcon('sd/sd_no_books.png');
-  const [sort, setSort] = useState('newest');
-
   const headerRef = useRef(null);
   const contentRef = useRef(null);
 
   useGSAP(() => {
+    const cards = contentRef.current?.querySelectorAll('[data-practice-card]');
     gsap.set([headerRef.current, contentRef.current], { opacity: 0, y: 18 });
+    gsap.set(cards, { opacity: 0, y: 18, scale: 0.98 });
   });
 
   useGSAP(() => {
-    gsap.to(headerRef.current, { opacity: 1, y: 0, duration: 0.38, ease: 'back.out(2)' });
-    gsap.to(contentRef.current, { opacity: 1, y: 0, duration: 0.35, ease: 'back.out(1.7)', delay: 0.08 });
-  }, []);
+    const cards = contentRef.current?.querySelectorAll('[data-practice-card]');
+    const sdImages = contentRef.current?.querySelectorAll('[data-practice-sd]');
 
-  const sorted = useMemo(() => {
-    const arr = [...words];
-    switch (sort) {
-      case 'newest': return arr.sort((a, b) => b.addedAt - a.addedAt);
-      case 'oldest': return arr.sort((a, b) => a.addedAt - b.addedAt);
-      case 'gojuon':  return arr.sort((a, b) => {
-        const ak = toKanaReading(a.jp, a.ruby);
-        const bk = toKanaReading(b.jp, b.ruby);
-        return ak.localeCompare(bk, 'ja');
-      });
-      default: return arr;
-    }
-  }, [words, sort]);
+    gsap.to(headerRef.current, { opacity: 1, y: 0, duration: 0.36, ease: 'back.out(2)' });
+    gsap.to(contentRef.current, { opacity: 1, y: 0, duration: 0.34, ease: 'back.out(1.7)', delay: 0.08 });
+    gsap.to(cards, {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.42,
+      ease: 'back.out(1.8)',
+      stagger: 0.06,
+      delay: 0.12,
+    });
+    gsap.to(sdImages, {
+      y: -5,
+      rotate: 1.5,
+      repeat: -1,
+      yoyo: true,
+      duration: 2.6,
+      ease: 'sine.inOut',
+      stagger: 0.35,
+      delay: 0.7,
+    });
+
+  }, []);
 
   return (
     <div
       data-ui-click-sfx
-      className="h-full overflow-y-auto"
-      style={{ background: '#F5F3FF' }}
+      className="h-full overflow-y-auto scroll-y"
+      style={{ background: '#F5F3FF', position: 'relative' }}
     >
-      {/* 顶部标题栏 */}
-      <div
-        ref={headerRef}
-        style={{
-          background: 'white',
-          padding: '18px 20px 14px',
-          boxShadow: '0 2px 12px rgba(91,79,233,0.08)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img src={bookImg} alt="单词本" width={28} height={28} style={{ objectFit: 'contain' }} />
-            <h1 style={{ fontSize: 20, fontWeight: 900, color: '#1E1B4B', margin: 0 }}>单词本</h1>
-          </div>
-          {words.length > 0 && (
-            <div
-              style={{
-                background: 'var(--tp-lite)',
-                color: 'var(--tp)',
-                fontSize: 12,
-                fontWeight: 700,
-                padding: '3px 10px',
-                borderRadius: 20,
-              }}
-            >
-              {words.length} 个词
-            </div>
-          )}
-        </div>
+      <div style={{ padding: '18px 16px 28px', position: 'relative', zIndex: 1 }}>
+        <h1
+          ref={headerRef}
+          style={{ fontSize: 18, fontWeight: 900, color: '#4B5563', margin: '0 0 10px' }}
+        >
+          练习中心
+        </h1>
 
-        {/* 排序选择器 */}
-        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-          {SORT_OPTIONS.map(opt => (
-            <button
-              key={opt.id}
-              className="btn-press"
-              onClick={() => setSort(opt.id)}
-              style={{
-                padding: '5px 14px',
-                borderRadius: 20,
-                fontSize: 13,
-                fontWeight: 700,
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'background 0.15s, color 0.15s',
-                background: sort === opt.id ? 'var(--tp)' : '#F3F2FF',
-                color: sort === opt.id ? 'white' : '#7C72E0',
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 主内容区 */}
-      <div ref={contentRef} style={{ padding: '16px 16px 24px' }}>
-
-        {/* 空状态 */}
-        {words.length === 0 ? (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '56px 24px',
-              gap: 16,
-              textAlign: 'center',
-            }}
-          >
-            <img
-              src={sdNoBooksImg}
-              alt="空书架"
-              width={160}
-              height={160}
-              style={{ objectFit: 'contain', marginBottom: -4 }}
-            />
-            <div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#1E1B4B', marginBottom: 6 }}>
-                还没有收录单词
-              </div>
-              <div style={{ fontSize: 14, color: '#9CA3AF', lineHeight: 1.6 }}>
-                完成关卡中的「单词对对碰」后
-                <br />
-                单词会自动加入单词本
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* 单词卡片网格 */
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 10,
-            }}
-          >
-            {sorted.map(word => (
-              <WordCard key={word.id} word={word} />
+        <div ref={contentRef}>
+          <div style={{ display: 'grid', gap: 18 }}>
+            {PRACTICE_ENTRIES.map(entry => (
+              <PracticeEntry key={entry.id} entry={entry} />
             ))}
           </div>
-        )}
+
+          <PracticeSection title="我的笔记" style={{ marginTop: 24 }}>
+            <PracticeEntry
+              entry={{
+                id: 'vocab-book',
+                label: '单词本',
+                icon: 'ui/book.png',
+                bg: 'var(--tp-lite)',
+                badge: words.length > 0 ? String(words.length) : '',
+              }}
+              iconSrc={bookImg}
+              onClick={() => navigate('/vocab/book')}
+            />
+          </PracticeSection>
+        </div>
       </div>
     </div>
   );
 }
 
-function WordCard({ word }) {
+function PracticeSection({ title, style, children }) {
   return (
-    <div
+    <section style={style}>
+      <h2 style={{ fontSize: 18, fontWeight: 900, color: '#4B5563', margin: '0 0 10px' }}>
+        {title}
+      </h2>
+      <div style={{ display: 'grid', gap: 12 }}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function PracticeEntry({ entry, iconSrc, onClick }) {
+  const resolvedIcon = useIcon(entry.icon);
+  const src = iconSrc || resolvedIcon;
+
+  if (entry.desc) {
+    return (
+      <div
+        data-practice-card
+        style={{
+          height: 126,
+          paddingTop: 18,
+          position: 'relative',
+        }}
+      >
+        <button
+          type="button"
+          className="btn-press"
+          style={{
+            width: '100%',
+            minHeight: 108,
+            background: 'white',
+            border: '2px solid #E5E7EB',
+            borderRadius: 12,
+            padding: '18px 132px 18px 22px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            gap: 6,
+            boxShadow: '0 3px 0 #E5E7EB',
+            cursor: 'default',
+            position: 'relative',
+            overflow: 'visible',
+            textAlign: 'left',
+          }}
+        >
+          <span style={{ fontSize: 17, fontWeight: 900, color: '#4B5563', whiteSpace: 'nowrap' }}>
+            {entry.label}
+          </span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', lineHeight: 1.35 }}>
+            {entry.desc}
+          </span>
+          <img
+            data-practice-sd
+            src={src}
+            alt=""
+            width={126}
+            height={126}
+            style={{
+              position: 'absolute',
+              right: 4,
+              bottom: -4,
+              width: 126,
+              height: 126,
+              objectFit: 'contain',
+              pointerEvents: 'none',
+            }}
+          />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="btn-press"
+      onClick={onClick}
       style={{
+        width: '100%',
+        minHeight: 74,
         background: 'white',
-        border: '1.5px solid #F3F2FF',
-        borderRadius: 16,
-        padding: '14px 12px 12px',
+        border: '2px solid #E5E7EB',
+        borderRadius: 12,
+        padding: '12px 14px 12px 22px',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
-        gap: 4,
-        boxShadow: '0 2px 8px rgba(91,79,233,0.06)',
+        justifyContent: 'space-between',
+        gap: 16,
+        boxShadow: '0 2px 0 #E5E7EB',
+        cursor: onClick ? 'pointer' : 'default',
+        position: 'relative',
+        overflow: 'hidden',
+        textAlign: 'left',
       }}
     >
-      {/* 日语单词（含假名标注） */}
-      <div
+      <span style={{ fontSize: 16, fontWeight: 900, color: '#4B5563', whiteSpace: 'nowrap' }}>
+        {entry.label}
+      </span>
+      <span
         style={{
-          fontSize: 22,
-          fontWeight: 900,
-          color: '#1E1B4B',
-          lineHeight: 2.2,
-          textAlign: 'center',
+          width: 56,
+          height: 56,
+          borderRadius: 16,
+          background: entry.bg,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
         }}
       >
-        <RubyText text={word.jp} rubyMap={word.ruby} />
-      </div>
-
-      {/* 中文释义 */}
-      <div
-        style={{
-          fontSize: 13,
-          color: '#4B5563',
-          fontWeight: 600,
-          textAlign: 'center',
-          lineHeight: 1.4,
-        }}
-      >
-        {word.cn}
-      </div>
-
-      <JapaneseSpeechButton text={word.jp} spokenText={toKanaReading(word.jp, word.ruby)} />
-    </div>
+        <img src={src} alt="" width={42} height={42} style={{ objectFit: 'contain' }} />
+      </span>
+      {entry.badge && (
+        <span
+          style={{
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            minWidth: 20,
+            height: 20,
+            borderRadius: 999,
+            background: '#EF4444',
+            color: 'white',
+            fontSize: 11,
+            fontWeight: 900,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 5px',
+            border: '2px solid white',
+          }}
+        >
+          {entry.badge}
+        </span>
+      )}
+    </button>
   );
 }
