@@ -567,10 +567,10 @@ function getPracticeBadgeStyle(tone) {
 
   if (tone === 'info') {
     return {
-      border: '#C7D2FE',
-      background: '#EEF2FF',
-      color: '#4F46E5',
-      shadow: '0 2px 0 #E0E7FF',
+      border: 'var(--tp-bdr)',
+      background: 'var(--tp-lite)',
+      color: 'var(--tp)',
+      shadow: '0 2px 0 color-mix(in srgb, var(--tp-bdr) 60%, white)',
     };
   }
 

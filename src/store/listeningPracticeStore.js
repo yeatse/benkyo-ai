@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import useGameStore from './gameStore';
 import useUserStore from './userStore';
+import useDailyTaskStore, { DAILY_TASK_EVENTS } from './dailyTaskStore';
 import { normalizeListeningSentence } from '../lib/listening-practice';
 
 const PRACTICE_HEARTS = 3;
@@ -79,6 +80,7 @@ const useListeningPracticeStore = create((set, get) => ({
       const stars = wrongCount === 0 ? 3 : wrongCount === 1 ? 2 : 1;
       const xp = stars * XP_PER_STAR;
       const levelResult = useGameStore.getState().awardPracticeXp(xp);
+      useDailyTaskStore.getState().recordEvent(DAILY_TASK_EVENTS.LISTENING_COMPLETE, 1);
 
       set({
         practice: {

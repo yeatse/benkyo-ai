@@ -9,6 +9,7 @@ import EditProfileSheet from '../components/Profile/EditProfileSheet';
 import BackpackSheet from '../components/Profile/BackpackSheet';
 import HeartDisplay from '../components/UI/HeartDisplay';
 import CheckInModal from '../components/UI/CheckInModal';
+import DailyTaskSection from '../components/Profile/DailyTaskSection';
 import { useIcon } from '../lib/icons';
 
 export default function ProfilePage() {
@@ -299,6 +300,8 @@ export default function ProfilePage() {
 
       {/* Course progress */}
       <div ref={progressRef} style={{ margin: '16px 16px 28px' }}>
+        <DailyTaskSection />
+
         <h3 style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
           课程进度
         </h3>

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import useGameStore from './gameStore';
 import useUserStore from './userStore';
+import useDailyTaskStore, { DAILY_TASK_EVENTS } from './dailyTaskStore';
 
 const PRACTICE_HEARTS = 3;
 const COINS_PER_QUESTION = 2;
@@ -75,6 +76,7 @@ const useWordReviewPracticeStore = create((set, get) => ({
       const stars = wrongCount === 0 ? 3 : wrongCount === 1 ? 2 : 1;
       const xp = stars * XP_PER_STAR;
       const levelResult = useGameStore.getState().awardPracticeXp(xp);
+      useDailyTaskStore.getState().recordEvent(DAILY_TASK_EVENTS.WORD_REVIEW_COMPLETE, 1);
 
       set({
         practice: {

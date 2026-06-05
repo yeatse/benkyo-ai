@@ -4,6 +4,7 @@ import useUserStore from './userStore';
 import useCourseStore from './courseStore';
 import useVocabStore from './vocabStore';
 import useWrongQuestionStore, { getWrongQuestionId } from './wrongQuestionStore';
+import useDailyTaskStore, { DAILY_TASK_EVENTS } from './dailyTaskStore';
 
 export const XP_PER_LEVEL = 200;
 export const BASE_XP = 60;
@@ -11,6 +12,10 @@ export const computeLevel = (totalXp) => Math.floor(totalXp / XP_PER_LEVEL) + 1;
 
 let coinPopSeq = 0;
 const createCoinPop = (amount) => ({ amount, uid: `${Date.now()}-${coinPopSeq += 1}` });
+
+const recordDailyTaskEvent = (eventType, amount) => {
+  useDailyTaskStore.getState().recordEvent(eventType, amount);
+};
 
 const findLevel = (chapterId, levelId) => {
   const chapters = useCourseStore.getState().chapters;
@@ -223,6 +228,7 @@ const useGameStore = create(
           const ratio = lesson.correctCount / lesson.questions.length;
           const rawXp = BASE_XP * ratio;
           const partialXp = rawXp > 0 ? Math.ceil(rawXp / 5) * 5 : 0;
+          recordDailyTaskEvent(DAILY_TASK_EVENTS.XP_EARNED, partialXp);
           set({
             totalXp: totalXp + partialXp,
             lesson: { ...lesson, isFailed: true, finalXp: partialXp, finalCoins: lesson.coinsEarned },
@@ -252,6 +258,7 @@ const useGameStore = create(
           const oldLevel = computeLevel(totalXp);
           const newTotalXp = totalXp + xp;
           const newLevel = computeLevel(newTotalXp);
+          recordDailyTaskEvent(DAILY_TASK_EVENTS.XP_EARNED, xp);
 
           let newProgress = levelProgress;
           if (!lesson.isPractice) {
@@ -264,6 +271,12 @@ const useGameStore = create(
                 bestXp: Math.max(xp, prevProgress.bestXp ?? 0),
               },
             };
+            recordDailyTaskEvent(DAILY_TASK_EVENTS.MAINLINE_LEVEL_COMPLETE, 1);
+            if (stars === 3) {
+              recordDailyTaskEvent(DAILY_TASK_EVENTS.MAINLINE_THREE_STAR, 1);
+            }
+          } else if (lesson.levelId === 'course-review') {
+            recordDailyTaskEvent(DAILY_TASK_EVENTS.COURSE_REVIEW_COMPLETE, 1);
           }
 
           // 收集 word-match 题型的单词到单词本
@@ -356,6 +369,7 @@ const useGameStore = create(
           const ratio = lesson.correctCount / lesson.questions.length;
           const rawXp = BASE_XP * ratio;
           const partialXp = rawXp > 0 ? Math.ceil(rawXp / 5) * 5 : 0;
+          recordDailyTaskEvent(DAILY_TASK_EVENTS.XP_EARNED, partialXp);
           set({
             totalXp: totalXp + partialXp,
             lesson: { ...lesson, hearts: 0, isFailed: true, finalXp: partialXp, finalCoins: lesson.coinsEarned },
@@ -387,6 +401,7 @@ const useGameStore = create(
         const newLevel = computeLevel(newTotalXp);
 
         set({ totalXp: newTotalXp });
+        recordDailyTaskEvent(DAILY_TASK_EVENTS.XP_EARNED, xp);
         return {
           totalXp: newTotalXp,
           oldLevel,

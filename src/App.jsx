@@ -16,8 +16,10 @@ import WordReviewPracticePage from './pages/WordReviewPracticePage';
 import WrongReviewPracticePage from './pages/WrongReviewPracticePage';
 import MainLayout from './components/Layout/MainLayout';
 import useUserStore from './store/userStore';
+import useDailyTaskStore from './store/dailyTaskStore';
 import XpBoostWidget from './components/UI/XpBoostWidget';
 import SoundEffectProvider from './components/UI/SoundEffectProvider';
+import DailyTaskToast from './components/UI/DailyTaskToast';
 
 // Syncs CSS theme vars whenever profile gender changes
 function ThemeSync() {
@@ -38,11 +40,24 @@ function AppInit() {
   const checkStreak = useUserStore(s => s.checkStreak);
   const syncHearts  = useUserStore(s => s.syncHearts);
   const syncXpBoost = useUserStore(s => s.syncXpBoost);
+  const ensureDailyTasks = useDailyTaskStore(s => s.ensureToday);
   useEffect(() => {
     checkStreak();
     syncHearts();
     syncXpBoost();
-  }, [checkStreak, syncHearts, syncXpBoost]);
+    ensureDailyTasks();
+  }, [checkStreak, ensureDailyTasks, syncHearts, syncXpBoost]);
+
+  useEffect(() => {
+    window.benkyoDebugDailyTaskToast = (selector = 'small') => (
+      useDailyTaskStore.getState().debugCompleteToast(selector)
+    );
+
+    return () => {
+      delete window.benkyoDebugDailyTaskToast;
+    };
+  }, []);
+
   return null;
 }
 
@@ -53,6 +68,7 @@ export default function App() {
       <ThemeSync />
       <SoundEffectProvider />
       <XpBoostWidget />
+      <DailyTaskToast />
       <Routes>
         <Route path="/setup" element={<ProfileSetupPage />} />
         <Route element={<RequireProfile />}>

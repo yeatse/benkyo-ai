@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import useDailyTaskStore, { DAILY_TASK_EVENTS } from './dailyTaskStore';
 
 const toDateStr = (d = new Date()) => d.toISOString().slice(0, 10);
 
@@ -131,6 +132,7 @@ const useUserStore = create(
           inventory: { ...inventory, cake: cakeCount - 1 },
           nextHeartAt: null, // hearts will be >= MAX_HEARTS now; pause regen
         });
+        useDailyTaskStore.getState().recordEvent(DAILY_TASK_EVENTS.CAKE_USED, 1);
         return true;
       },
 
