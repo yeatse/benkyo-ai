@@ -39,7 +39,7 @@ export default function LessonScreen() {
   const handleExit = () => {
     stopJapaneseSpeech();
     exitLesson();
-    navigate('/');
+    navigate(lesson?.returnPath ?? '/');
   };
 
   const handleContinue = () => {
@@ -125,6 +125,7 @@ export default function LessonScreen() {
     .find(chapter => chapter.id === lesson.chapterId)
     ?.levels.find(level => level.id === lesson.levelId);
   const displayLessonCoins = coinDisplay.lessonKey === activeLessonKey ? coinDisplay.value : 0;
+  const lessonTitle = lesson.title ?? currentLevel?.title ?? '闯关练习';
 
   return (
     <div className="flex flex-col h-full relative bg-[#F5F3FF]">
@@ -143,7 +144,7 @@ export default function LessonScreen() {
         </button>
 
         <h1 className="min-w-0 flex-1 truncate text-center text-sm font-extrabold text-[#312E81]">
-          {currentLevel?.title ?? '闯关练习'}
+          {lessonTitle}
         </h1>
         <div
           ref={coinTargetRef}

@@ -12,6 +12,7 @@ const CAKE_PRICE = 80;
 
 export default function ReviveSheet({ hasCake, cakeCount, canBuyCake, coins }) {
   const navigate = useNavigate();
+  const lesson       = useGameStore(s => s.lesson);
   const reviveLesson = useGameStore(s => s.reviveLesson);
   const exitLesson   = useGameStore(s => s.exitLesson);
   const consumeCake  = useUserStore(s => s.useCake);
@@ -71,8 +72,9 @@ export default function ReviveSheet({ hasCake, cakeCount, canBuyCake, coins }) {
 
   const handleQuit = () => {
     exitLesson();
-    navigate('/');
+    navigate(lesson?.returnPath ?? '/');
   };
+  const returnLabel = lesson?.returnPath === '/vocab' ? '回到练习中心' : '回到首页';
 
   return (
     <div
@@ -158,7 +160,7 @@ export default function ReviveSheet({ hasCake, cakeCount, canBuyCake, coins }) {
           onClick={handleQuit}
           className="text-sm text-[#9CA3AF] py-2 px-4 btn-press"
         >
-          放弃，回到首页
+          放弃，{returnLabel}
         </button>
       </div>
     </div>

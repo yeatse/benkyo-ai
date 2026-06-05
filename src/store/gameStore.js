@@ -81,6 +81,40 @@ const useGameStore = create(
         });
       },
 
+      startPracticeLesson({ levelId, title, questions, returnPath = '/vocab' }) {
+        if (!Array.isArray(questions) || questions.length === 0) return;
+
+        useUserStore.getState().syncHearts();
+        const currentHearts = useUserStore.getState().hearts;
+
+        set({
+          lesson: {
+            chapterId: '__practice__',
+            levelId,
+            title,
+            returnPath,
+            isPractice: true,
+            questions,
+            currentIndex: 0,
+            hearts: currentHearts,
+            correctCount: 0,
+            reviewCorrect: false,
+            selectedAnswer: null,
+            feedbackState: null,
+            isComplete: false,
+            isFailed: false,
+            coinsEarned: 0,
+            coinPop: null,
+            finalStars: 0,
+            finalXp: 0,
+            finalCoins: 0,
+            leveledUp: false,
+            oldLevel: 1,
+            newLevel: 1,
+          },
+        });
+      },
+
       submitAnswer(answer) {
         const { lesson } = get();
         if (!lesson || lesson.feedbackState !== null) return;
@@ -185,15 +219,18 @@ const useGameStore = create(
           const newTotalXp = totalXp + xp;
           const newLevel = computeLevel(newTotalXp);
 
-          const prevProgress = levelProgress[lesson.levelId] ?? {};
-          const newProgress = {
-            ...levelProgress,
-            [lesson.levelId]: {
-              completed: true,
-              stars: Math.max(stars, prevProgress.stars ?? 0),
-              bestXp: Math.max(xp, prevProgress.bestXp ?? 0),
-            },
-          };
+          let newProgress = levelProgress;
+          if (!lesson.isPractice) {
+            const prevProgress = levelProgress[lesson.levelId] ?? {};
+            newProgress = {
+              ...levelProgress,
+              [lesson.levelId]: {
+                completed: true,
+                stars: Math.max(stars, prevProgress.stars ?? 0),
+                bestXp: Math.max(xp, prevProgress.bestXp ?? 0),
+              },
+            };
+          }
 
           // 收集 word-match 题型的单词到单词本
           const wordMatchPairs = lesson.questions

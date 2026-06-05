@@ -5,9 +5,12 @@ import gsap from 'gsap';
 import useVocabStore from '../store/vocabStore';
 import useCourseStore from '../store/courseStore';
 import useTtsStore from '../store/ttsStore';
+import useGameStore from '../store/gameStore';
+import useUserStore from '../store/userStore';
 import useListeningPracticeStore from '../store/listeningPracticeStore';
 import { getTtsConfigError } from '../lib/tts';
 import { buildListeningPracticeQuestions } from '../lib/listening-practice';
+import { buildCourseReviewPracticeQuestions } from '../lib/course-review-practice';
 import { useIcon } from '../lib/icons';
 
 gsap.registerPlugin(useGSAP);
@@ -43,6 +46,7 @@ export default function VocabPage() {
   const words = useVocabStore(s => s.words);
   const chapters = useCourseStore(s => s.chapters);
   const startListeningPractice = useListeningPracticeStore(s => s.start);
+  const startPracticeLesson = useGameStore(s => s.startPracticeLesson);
   const navigate = useNavigate();
   const bookImg = useIcon('ui/book.png');
   const headerRef = useRef(null);
@@ -100,6 +104,28 @@ export default function VocabPage() {
     navigate('/practice/listening');
   };
 
+  const handleCourseReviewPractice = () => {
+    const questions = buildCourseReviewPracticeQuestions(chapters);
+    if (questions.length === 0) {
+      setNotice('too-few');
+      return;
+    }
+
+    useUserStore.getState().syncHearts();
+    if (useUserStore.getState().hearts === 0) {
+      setNotice('no-hearts');
+      return;
+    }
+
+    startPracticeLesson({
+      levelId: 'course-review',
+      title: '课程巩固',
+      questions,
+      returnPath: '/vocab',
+    });
+    navigate('/practice/course-review');
+  };
+
   return (
     <div
       data-ui-click-sfx
@@ -120,7 +146,13 @@ export default function VocabPage() {
               <PracticeEntry
                 key={entry.id}
                 entry={entry}
-                onClick={entry.id === 'listening' ? handleListeningPractice : undefined}
+                onClick={
+                  entry.id === 'listening'
+                    ? handleListeningPractice
+                    : entry.id === 'course-review'
+                    ? handleCourseReviewPractice
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -157,6 +189,12 @@ export default function VocabPage() {
           onClose={() => setNotice(null)}
         />
       )}
+      {notice === 'no-hearts' && (
+        <PracticeNoticeSheet
+          type="no-hearts"
+          onClose={() => setNotice(null)}
+        />
+      )}
     </div>
   );
 }
@@ -167,6 +205,7 @@ function PracticeNoticeSheet({ type, onClose, onGoSettings }) {
   const sdFallImg = useIcon('sd/sd_fall.png');
   const sdNoBooksImg = useIcon('sd/sd_no_books.png');
   const isTts = type === 'tts';
+  const isTooFew = type === 'too-few';
 
   useGSAP(() => {
     gsap.set(overlayRef.current, { opacity: 0 });
@@ -206,14 +245,14 @@ function PracticeNoticeSheet({ type, onClose, onGoSettings }) {
         <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E5E0FF', margin: '12px auto 22px' }} />
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <img
-            src={isTts ? sdFallImg : sdNoBooksImg}
+            src={isTooFew ? sdNoBooksImg : sdFallImg}
             alt=""
             width={148}
             height={148}
             style={{ objectFit: 'contain', margin: '0 auto 6px' }}
           />
           <h2 style={{ fontSize: 18, fontWeight: 900, color: '#1E1B4B', marginBottom: 8 }}>
-            {isTts ? '尚未配置音频模型' : '题库还不够'}
+            {isTts ? '尚未配置音频模型' : isTooFew ? '题库还不够' : '生命值耗尽'}
           </h2>
           <p style={{ fontSize: 13, color: '#6B7280', lineHeight: 1.6, margin: '0 8px' }}>
             {isTts ? (
@@ -221,8 +260,10 @@ function PracticeNoticeSheet({ type, onClose, onGoSettings }) {
                 听力练习需要先配置音频模型。<br />
                 请前往 <strong>「我的」→「设置」</strong> 中填写 TTS 配置。
               </>
-            ) : (
+            ) : isTooFew ? (
               '当前题库太少啦，多闯几关后再回来吧~'
+            ) : (
+              '心心恢复后再回来练习吧~'
             )}
           </p>
         </div>

@@ -108,7 +108,7 @@ export default function LessonComplete() {
 
   const handleContinue = () => {
     exitLesson();
-    navigate('/');
+    navigate(lesson?.returnPath ?? '/');
   };
 
   const getMessage = () => {

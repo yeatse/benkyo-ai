@@ -92,8 +92,9 @@ export default function LessonFailed() {
 
   const handleRetry = () => {
     exitLesson();
-    navigate('/');
+    navigate(lesson?.returnPath ?? '/');
   };
+  const returnLabel = lesson?.returnPath === '/vocab' ? '回到练习中心' : '回到首页';
 
   return (
     <div
@@ -182,7 +183,7 @@ export default function LessonFailed() {
             boxShadow: '0 4px 0 #991B1B',
           }}
         >
-          回到首页
+          {returnLabel}
         </button>
       </div>
     </div>
