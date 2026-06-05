@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { applyTheme } from './lib/theme';
 import HomePage from './pages/HomePage';
@@ -20,6 +20,7 @@ import useDailyTaskStore from './store/dailyTaskStore';
 import XpBoostWidget from './components/UI/XpBoostWidget';
 import SoundEffectProvider from './components/UI/SoundEffectProvider';
 import DailyTaskToast from './components/UI/DailyTaskToast';
+import XpBoostActivationModal from './components/UI/XpBoostActivationModal';
 
 // Syncs CSS theme vars whenever profile gender changes
 function ThemeSync() {
@@ -61,6 +62,35 @@ function AppInit() {
   return null;
 }
 
+function DebugConsoleCommands() {
+  const [xpBoostModal, setXpBoostModal] = useState(null);
+
+  useEffect(() => {
+    window.benkyoDebugXpBoost = (multiplier = 2) => {
+      const result = useUserStore.getState().debugActivateXpBoost(multiplier);
+      setXpBoostModal(result.multiplier);
+      return {
+        ok: true,
+        multiplier: result.multiplier,
+        expiresAt: new Date(result.expiresAt).toLocaleString(),
+      };
+    };
+
+    return () => {
+      delete window.benkyoDebugXpBoost;
+    };
+  }, []);
+
+  if (xpBoostModal === null) return null;
+
+  return (
+    <XpBoostActivationModal
+      multiplier={xpBoostModal}
+      onDismiss={() => setXpBoostModal(null)}
+    />
+  );
+}
+
 export default function App() {
   return (
     <HashRouter>
@@ -69,6 +99,7 @@ export default function App() {
       <SoundEffectProvider />
       <XpBoostWidget />
       <DailyTaskToast />
+      <DebugConsoleCommands />
       <Routes>
         <Route path="/setup" element={<ProfileSetupPage />} />
         <Route element={<RequireProfile />}>

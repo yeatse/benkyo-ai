@@ -142,6 +142,21 @@ const useUserStore = create(
         return true;
       },
 
+      debugActivateXpBoost(multiplier = 2) {
+        const normalized = Number(multiplier) === 3 ? 3 : 2;
+        const expiresAt = Date.now() + 15 * 60 * 1000;
+        set({
+          xpBoost: {
+            multiplier: normalized,
+            expiresAt,
+          },
+        });
+        return {
+          multiplier: normalized,
+          expiresAt,
+        };
+      },
+
       // Use one Cake item: adds 3 hearts (may exceed MAX_HEARTS, max 5).
       // Only allowed when hearts < MAX_HEARTS (not already full/over-full).
       useCake() {
