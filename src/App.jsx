@@ -76,8 +76,13 @@ function DebugConsoleCommands() {
       };
     };
 
+    window.benkyoDebugAddCoins = (amount = 1000) => (
+      useUserStore.getState().debugAddCoins(amount)
+    );
+
     return () => {
       delete window.benkyoDebugXpBoost;
+      delete window.benkyoDebugAddCoins;
     };
   }, []);
 

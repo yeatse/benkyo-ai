@@ -28,6 +28,9 @@ const useUserStore = create(
       // ── Inventory (backpack) ─────────────────────────
       inventory: { xp2x_15: 0, xp3x_15: 0, cake: 0 },
 
+      // ── Omamori collection ───────────────────────────
+      omamoriCollection: {},
+
       // ── Learning profile (persisted from onboarding wizard) ──
       learningProfile: null, // { level, pace, purpose, style } | null
 
@@ -90,6 +93,31 @@ const useUserStore = create(
         if (amount <= 0) return;
         useBadgeStore.getState().addCoinsEarned(amount);
         set(s => ({ coins: s.coins + amount }));
+      },
+
+      spendCoins(amount) {
+        const cost = Math.max(0, Number(amount) || 0);
+        if (cost <= 0) return false;
+        const { coins } = get();
+        if (coins < cost) return false;
+        set({ coins: coins - cost });
+        return true;
+      },
+
+      recordOmamoriDraw(itemId) {
+        if (!itemId) return 0;
+        let nextCount = 0;
+        set(s => {
+          const current = s.omamoriCollection?.[itemId] ?? 0;
+          nextCount = current + 1;
+          return {
+            omamoriCollection: {
+              ...(s.omamoriCollection ?? {}),
+              [itemId]: nextCount,
+            },
+          };
+        });
+        return nextCount;
       },
 
       grantReward(reward) {
@@ -161,6 +189,20 @@ const useUserStore = create(
         };
       },
 
+      debugAddCoins(amount = 1000) {
+        const added = Math.max(1, Math.floor(Number(amount) || 1000));
+        let nextCoins = 0;
+        set(s => {
+          nextCoins = s.coins + added;
+          return { coins: nextCoins };
+        });
+        return {
+          ok: true,
+          added,
+          coins: nextCoins,
+        };
+      },
+
       // Use one Cake item: adds 3 hearts (may exceed MAX_HEARTS, max 5).
       // Only allowed when hearts < MAX_HEARTS (not already full/over-full).
       useCake() {
@@ -210,6 +252,7 @@ const useUserStore = create(
         nextHeartAt: s.nextHeartAt,
         coins: s.coins,
         inventory: s.inventory,
+        omamoriCollection: s.omamoriCollection,
         xpBoost: s.xpBoost,
         lastCheckIn: s.lastCheckIn,
         learningProfile: s.learningProfile,
