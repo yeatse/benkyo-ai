@@ -10,7 +10,7 @@ const DEFAULT_TIMEOUT_MS = 20_000;
  * Keep every field that can change the generated audio in this profile.
  */
 export function getTtsCacheKey(text, config) {
-  const normalizedText = normalizeText(text);
+  const normalizedText = normalizeSpeechText(text);
   const profile = normalizeConfig(config);
 
   return JSON.stringify({
@@ -42,7 +42,7 @@ export function getTtsConfigError(config) {
  * IndexedDB is used because localStorage is not suitable for binary audio.
  */
 export async function getJapaneseSpeechAudio(text, config, { signal } = {}) {
-  const normalizedText = normalizeText(text);
+  const normalizedText = normalizeSpeechText(text);
   const cacheKey = getTtsCacheKey(normalizedText, config);
   const cachedAudio = await readCachedAudio(cacheKey);
 
@@ -58,13 +58,13 @@ export async function getJapaneseSpeechAudio(text, config, { signal } = {}) {
  * Exported so the Settings page can test draft values before saving them.
  */
 export async function requestTtsAudioBlob(text, config, { signal } = {}) {
-  const normalizedText = normalizeText(text);
+  const normalizedText = normalizeSpeechText(text);
   const profile = normalizeConfig(config);
   const configError = getTtsConfigError(profile);
 
   if (!normalizedText) throw new Error('播放文本不能为空');
   if (configError) throw new Error(configError);
-  if (profile.provider !== 'aliyun-cosyvoice') {
+  if (!isSupportedTtsProvider(profile.provider)) {
     throw new Error(`暂不支持语音提供商：${profile.provider}`);
   }
 
@@ -73,27 +73,15 @@ export async function requestTtsAudioBlob(text, config, { signal } = {}) {
   try {
     const res = await fetch(profile.baseUrl, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${profile.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: profile.modelId,
-        input: {
-          text: normalizedText,
-          voice: profile.voice,
-          format: profile.format,
-          sample_rate: profile.sampleRate,
-          rate: profile.rate,
-          bit_rate: profile.bitRate,
-        },
-      }),
+      headers: createTtsRequestHeaders(profile),
+      body: JSON.stringify(createTtsRequestBody(profile, normalizedText)),
       signal: requestSignal.signal,
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`HTTP ${res.status}: ${errText.slice(0, 120)}`);
+      const providerError = getTtsResponseErrorMessage(parseJson(errText));
+      throw new Error(providerError || `HTTP ${res.status}: ${errText.slice(0, 120)}`);
     }
 
     const audioBlob = await extractTtsAudioBlob(res, requestSignal.signal);
@@ -104,8 +92,127 @@ export async function requestTtsAudioBlob(text, config, { signal } = {}) {
   }
 }
 
+function isSupportedTtsProvider(provider) {
+  return (
+    provider === 'aliyun-cosyvoice' ||
+    provider === 'aliyun-qwen-tts' ||
+    provider === 'aliyun-minimax-tts' ||
+    provider === 'minimax-official-tts' ||
+    provider === 'volcengine-doubao-tts'
+  );
+}
+
+function createTtsRequestHeaders(profile) {
+  if (profile.provider === 'volcengine-doubao-tts') {
+    return {
+      'Content-Type': 'application/json',
+      'X-Api-Key': normalizeBearerToken(profile.apiKey),
+      'X-Api-Resource-Id': profile.modelId,
+    };
+  }
+
+  return {
+    Authorization: `Bearer ${normalizeBearerToken(profile.apiKey)}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+function createTtsRequestBody(profile, text) {
+  if (profile.provider === 'aliyun-qwen-tts') {
+    return {
+      model: profile.modelId,
+      input: {
+        text,
+        voice: profile.voice,
+        language_type: 'Japanese',
+      },
+    };
+  }
+
+  if (profile.provider === 'aliyun-minimax-tts') {
+    return {
+      model: profile.modelId,
+      input: {
+        text,
+        voice_setting: {
+          voice_id: profile.voice,
+          language_boost: 'Japanese',
+        },
+        audio_setting: {
+          format: 'mp3',
+        },
+      },
+    };
+  }
+
+  if (profile.provider === 'minimax-official-tts') {
+    return {
+      model: profile.modelId,
+      text,
+      stream: false,
+      voice_setting: {
+        voice_id: profile.voice,
+        language_boost: 'Japanese',
+      },
+      audio_setting: {
+        format: 'mp3',
+      },
+    };
+  }
+
+  if (profile.provider === 'volcengine-doubao-tts') {
+    return {
+      req_params: {
+        text,
+        speaker: profile.voice,
+        audio_params: {
+          format: 'mp3',
+          sample_rate: profile.sampleRate,
+          bit_rate: normalizeBitRateBps(profile.bitRate),
+        },
+        additions: {
+          explicit_language: 'ja',
+        },
+      },
+    };
+  }
+
+  return {
+    model: profile.modelId,
+    input: {
+      text,
+      voice: profile.voice,
+      format: profile.format,
+      sample_rate: profile.sampleRate,
+      rate: profile.rate,
+      bit_rate: profile.bitRate,
+    },
+  };
+}
+
 function normalizeText(text) {
   return typeof text === 'string' ? text.trim() : '';
+}
+
+function normalizeBearerToken(apiKey) {
+  return normalizeText(apiKey).replace(/^bearer\s+/i, '');
+}
+
+function normalizeBitRateBps(bitRate) {
+  const numericBitRate = Number(bitRate);
+  if (!Number.isFinite(numericBitRate) || numericBitRate <= 0) return 64000;
+  return numericBitRate < 1000 ? numericBitRate * 1000 : numericBitRate;
+}
+
+function normalizeSpeechText(text) {
+  const normalized = normalizeText(text);
+  if (!normalized || hasSentenceEndingPunctuation(normalized)) return normalized;
+  return `${normalized}。`;
+}
+
+function hasSentenceEndingPunctuation(text) {
+  const textWithoutClosingMarks = text.replace(/[）)】\]」』》〉〕〗〙〛｝}"'”’]+$/u, '');
+  return /[。.!！?？…]+$/u.test(textWithoutClosingMarks);
 }
 
 function normalizeConfig(config = {}) {
@@ -149,7 +256,15 @@ async function extractTtsAudioBlob(res, signal) {
   if (contentType.includes('audio/')) return await res.blob();
 
   const data = await res.json();
+  const providerError = getTtsResponseErrorMessage(data);
+  if (providerError) throw new Error(providerError);
+
   const outputAudio = data?.output?.audio;
+  const hexAudio = data?.output?.data?.audio || data?.data?.audio;
+  if (isHexString(hexAudio)) {
+    return hexToBlob(hexAudio, 'audio/mpeg');
+  }
+
   const audioUrl =
     outputAudio?.url ||
     data?.output?.audio_url ||
@@ -169,13 +284,60 @@ async function extractTtsAudioBlob(res, signal) {
     outputAudio?.data ||
     (typeof outputAudio === 'string' ? outputAudio : '') ||
     data?.audio ||
-    data?.data?.audio;
+    data?.data?.audio ||
+    (typeof data?.data === 'string' ? data.data : '');
 
   if (typeof base64Audio === 'string' && base64Audio.length > 0) {
     return base64ToBlob(base64Audio, 'audio/mpeg');
   }
 
   return null;
+}
+
+function parseJson(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function getTtsResponseErrorMessage(data) {
+  if (data?.code !== undefined) {
+    const numericCode = Number(data.code);
+    if (numericCode === 0) return '';
+
+    const message = normalizeText(data.message);
+    if (message) return `TTS 服务错误 ${data.code}: ${message}`;
+    return `TTS 服务错误 ${data.code}`;
+  }
+
+  const baseResp = data?.base_resp || data?.output?.base_resp;
+  const statusCode = baseResp?.status_code;
+  const statusMsg = normalizeText(baseResp?.status_msg);
+
+  if (statusCode === undefined && !statusMsg) return '';
+
+  const numericStatus = Number(statusCode);
+  const isSuccess = !Number.isNaN(numericStatus) && numericStatus === 0;
+  if (isSuccess) return '';
+
+  if (statusMsg && statusCode !== undefined) return `TTS 服务错误 ${statusCode}: ${statusMsg}`;
+  return statusMsg || `TTS 服务错误 ${statusCode}`;
+}
+
+function isHexString(value) {
+  return typeof value === 'string' && value.length > 0 && value.length % 2 === 0 && /^[\da-f]+$/i.test(value);
+}
+
+function hexToBlob(hex, mimeType) {
+  const bytes = new Uint8Array(hex.length / 2);
+
+  for (let i = 0; i < bytes.length; i += 1) {
+    bytes[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+
+  return new Blob([bytes], { type: mimeType });
 }
 
 function base64ToBlob(base64, mimeType) {

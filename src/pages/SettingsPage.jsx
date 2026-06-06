@@ -75,17 +75,21 @@ export default function SettingsPage() {
   const setIconSkin = useAppearanceStore(s => s.setIconSkin);
   const settingImg = useIcon('ui/setting.png');
   const activeIconSkin = isIconSkin(iconSkin) ? iconSkin : DEFAULT_ICON_SKIN;
+  const savedTtsProvider = TTS_PROVIDER_PRESETS[savedTtsConfig.provider]
+    ? savedTtsConfig.provider
+    : 'aliyun-cosyvoice';
+  const savedTtsPreset = TTS_PROVIDER_PRESETS[savedTtsProvider];
 
   const [provider, setProvider] = useState(savedConfig.provider || 'openai');
   const [apiKey, setApiKey] = useState(savedConfig.apiKey || '');
   const [modelId, setModelId] = useState(savedConfig.modelId || '');
   const [baseUrl, setBaseUrl] = useState(savedConfig.baseUrl || '');
   const [showKey, setShowKey] = useState(false);
-  const [ttsProvider, setTtsProvider] = useState(savedTtsConfig.provider || 'aliyun-cosyvoice');
-  const [ttsBaseUrl, setTtsBaseUrl] = useState(savedTtsConfig.baseUrl || TTS_PROVIDER_PRESETS['aliyun-cosyvoice'].baseUrl);
-  const [ttsModelId, setTtsModelId] = useState(savedTtsConfig.modelId || 'cosyvoice-v3-flash');
+  const [ttsProvider, setTtsProvider] = useState(savedTtsProvider);
+  const [ttsBaseUrl, setTtsBaseUrl] = useState(savedTtsConfig.baseUrl || savedTtsPreset.baseUrl);
+  const [ttsModelId, setTtsModelId] = useState(savedTtsConfig.modelId || savedTtsPreset.modelId);
   const [ttsApiKey, setTtsApiKey] = useState(savedTtsConfig.apiKey || '');
-  const [ttsVoice, setTtsVoice] = useState(savedTtsConfig.voice || 'loongriko_v3');
+  const [ttsVoice, setTtsVoice] = useState(savedTtsConfig.voice || savedTtsPreset.voice);
   const [showTtsKey, setShowTtsKey] = useState(false);
 
   const [testStatus, setTestStatus] = useState(null); // null | 'loading' | 'ok' | 'error'
@@ -106,6 +110,7 @@ export default function SettingsPage() {
   }, []);
 
   const currentPreset = PROVIDER_PRESETS[provider];
+  const currentTtsPreset = TTS_PROVIDER_PRESETS[ttsProvider];
 
   useEffect(() => {
     setConfig({
@@ -130,6 +135,8 @@ export default function SettingsPage() {
     setTtsProvider(newProvider);
     const preset = TTS_PROVIDER_PRESETS[newProvider];
     if (preset?.baseUrl) setTtsBaseUrl(preset.baseUrl);
+    if (preset?.modelId) setTtsModelId(preset.modelId);
+    if (preset?.voice) setTtsVoice(preset.voice);
     setTtsTestStatus(null);
     setTtsTestMessage('');
   }
@@ -290,7 +297,7 @@ export default function SettingsPage() {
       } else if (msg.includes('timeout')) {
         setTtsTestMessage('TTS 请求超时，请检查网络或 Base URL');
       } else {
-        setTtsTestMessage(`试音失败：${msg.slice(0, 80)}`);
+        setTtsTestMessage(`试音失败：${msg.slice(0, 160)}`);
       }
     }
   }
@@ -574,7 +581,7 @@ export default function SettingsPage() {
               type="text"
               value={ttsBaseUrl}
               onChange={e => setTtsBaseUrl(e.target.value)}
-              placeholder={TTS_PROVIDER_PRESETS[ttsProvider]?.baseUrl || ''}
+              placeholder={currentTtsPreset?.baseUrl || ''}
               style={{
                 width: '100%', padding: '11px 14px',
                 background: '#F9FAFB', border: '1.5px solid #E5E7EB',
@@ -594,7 +601,7 @@ export default function SettingsPage() {
               type="text"
               value={ttsModelId}
               onChange={e => setTtsModelId(e.target.value)}
-              placeholder="cosyvoice-v3-flash"
+              placeholder={currentTtsPreset?.modelId || '模型 ID'}
               style={{
                 width: '100%', padding: '11px 14px',
                 background: '#F9FAFB', border: '1.5px solid #E5E7EB',
@@ -650,7 +657,7 @@ export default function SettingsPage() {
               type="text"
               value={ttsVoice}
               onChange={e => setTtsVoice(e.target.value)}
-              placeholder="loongriko_v3"
+              placeholder={currentTtsPreset?.voice || '音色 Voice'}
               style={{
                 width: '100%', padding: '11px 14px',
                 background: '#F9FAFB', border: '1.5px solid #E5E7EB',
@@ -662,7 +669,7 @@ export default function SettingsPage() {
           </div>
 
           <p style={{ fontSize: 11, color: '#6B7280', margin: '0 0 14px 0', lineHeight: 1.55 }}>
-            默认试音参数：format=mp3（设备兼容最佳），sample_rate=24000（语音清晰且体积适中），rate=1.0，bit_rate=64。
+            {getTtsProviderHint(ttsProvider)}
           </p>
 
           {/* TTS Test Button */}
@@ -796,4 +803,24 @@ function getModelIdPlaceholder(provider) {
     'openai-compatible': 'your-model-id',
   };
   return map[provider] || '模型 ID';
+}
+
+function getTtsProviderHint(provider) {
+  if (provider === 'aliyun-qwen-tts') {
+    return 'Qwen-TTS 会固定传入 language_type=Japanese；当前只需配置 Base URL、模型 ID、API 密钥和音色 Voice。';
+  }
+
+  if (provider === 'aliyun-minimax-tts') {
+    return 'MiniMax 会固定传入 voice_setting.language_boost=Japanese；音色 Voice 会作为 voice_setting.voice_id。';
+  }
+
+  if (provider === 'minimax-official-tts') {
+    return 'MiniMax 官方 API 会固定传入 voice_setting.language_boost=Japanese；音色 Voice 会作为 voice_setting.voice_id。';
+  }
+
+  if (provider === 'volcengine-doubao-tts') {
+    return '豆包语音会使用 X-Api-Key 和 X-Api-Resource-Id 鉴权；模型 ID 会作为 X-Api-Resource-Id，音色 Voice 会作为 req_params.speaker，并固定 explicit_language=ja。';
+  }
+
+  return '默认试音参数：format=mp3（设备兼容最佳），sample_rate=24000（语音清晰且体积适中），rate=1.0，bit_rate=64。';
 }
