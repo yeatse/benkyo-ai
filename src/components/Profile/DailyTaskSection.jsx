@@ -22,7 +22,7 @@ function formatResetTime(ms) {
   return `${Math.max(1, minutes)} 分钟`;
 }
 
-export default function DailyTaskSection() {
+export default function DailyTaskSection({ onRewardDismiss }) {
   const tasks = useDailyTaskStore(s => s.tasks);
   const ensureToday = useDailyTaskStore(s => s.ensureToday);
   const claimTask = useDailyTaskStore(s => s.claimTask);
@@ -75,7 +75,10 @@ export default function DailyTaskSection() {
           title="宝箱开启！"
           subtitle="奖励已发放"
           sourceLabel={rewardModal.chestLabel}
-          onDismiss={() => setRewardModal(null)}
+          onDismiss={() => {
+            setRewardModal(null);
+            onRewardDismiss?.();
+          }}
         />
       )}
     </section>

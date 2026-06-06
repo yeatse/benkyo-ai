@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import useBadgeStore from './badgeStore';
 
 export const DAILY_TASK_STORE_KEY = 'benkyo-ai-daily-tasks';
 
@@ -237,7 +238,10 @@ const useDailyTaskStore = create(
         const delta = Math.max(0, Number(amount) || 0);
         if (!eventType || delta <= 0) return;
 
-        get().ensureToday();
+        const beforeTasks = get().ensureToday();
+        const completedBefore = new Set(
+          beforeTasks.filter(task => task.completed).map(task => task.instanceId)
+        );
 
         set((state) => {
           const today = toLocalDateKey();
@@ -279,6 +283,13 @@ const useDailyTaskStore = create(
               : state.toastQueue,
           };
         });
+
+        const newlyCompletedCount = get().tasks.filter(task => (
+          task.completed && !completedBefore.has(task.instanceId)
+        )).length;
+        if (newlyCompletedCount > 0) {
+          useBadgeStore.getState().recordDailyTaskCompleted(newlyCompletedCount);
+        }
       },
 
       dismissToast(toastId) {

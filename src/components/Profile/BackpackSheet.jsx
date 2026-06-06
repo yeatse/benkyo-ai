@@ -8,7 +8,7 @@ import { useIcon, useIconResolver } from '../../lib/icons';
 
 gsap.registerPlugin(useGSAP);
 
-export default function BackpackSheet({ onClose }) {
+export default function BackpackSheet({ onClose, onBadgeProgressChange }) {
   const inventory   = useUserStore(s => s.inventory);
   const hearts      = useUserStore(s => s.hearts);
   const xpBoost     = useUserStore(s => s.xpBoost);
@@ -66,6 +66,7 @@ export default function BackpackSheet({ onClose }) {
     if (item.id === 'cake') {
       const ok = consumeCake();
       triggerFlash(item.id, ok ? 'used' : 'full');
+      if (ok) onBadgeProgressChange?.();
     }
   };
 

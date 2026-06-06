@@ -5,6 +5,7 @@ import useCourseStore from './courseStore';
 import useVocabStore from './vocabStore';
 import useWrongQuestionStore, { getWrongQuestionId } from './wrongQuestionStore';
 import useDailyTaskStore, { DAILY_TASK_EVENTS } from './dailyTaskStore';
+import useBadgeStore from './badgeStore';
 
 export const XP_PER_LEVEL = 200;
 export const BASE_XP = 60;
@@ -335,6 +336,7 @@ const useGameStore = create(
         const question = lesson.questions[lesson.currentIndex];
         removeWrongQuestionFromLesson(lesson, question);
         useUserStore.getState().restoreHeart();
+        useBadgeStore.getState().recordAppealSuccess(1);
         set({
           lesson: {
             ...lesson,

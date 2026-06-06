@@ -434,6 +434,125 @@ rt {
   7.142% { transform: translateY(-6px) scale(1.01); }
 }
 
+/* ── Profile badges ── */
+.badge-medal {
+  width: min(100px, 100%);
+  aspect-ratio: 1;
+  position: relative;
+  overflow: hidden;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.badge-medal img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.badge-medal--locked img {
+  filter: grayscale(1) saturate(0.15) opacity(0.42);
+}
+
+.badge-medal--unlocked {
+  filter: drop-shadow(0 5px 10px rgba(245,158,11,0.25));
+}
+
+.badge-medal--unlocked::after {
+  content: '';
+  position: absolute;
+  top: -28%;
+  left: -72%;
+  width: 42%;
+  height: 156%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.94), transparent);
+  transform: rotate(24deg);
+  animation: badgeSweep 2.8s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes badgeSweep {
+  0%, 28% { left: -72%; opacity: 0; }
+  45% { opacity: 1; }
+  68%, 100% { left: 132%; opacity: 0; }
+}
+
+.badge-unlock-medal {
+  border-radius: 50%;
+  overflow: hidden;
+  filter: drop-shadow(0 16px 20px rgba(217,119,6,0.30));
+  transform-origin: center;
+}
+
+.badge-unlock-medal img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.badge-unlock-medal::before {
+  content: '';
+  position: absolute;
+  inset: 7%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 28% 20%, rgba(255,255,255,0.78), transparent 18%),
+    radial-gradient(circle at 70% 74%, rgba(253,224,71,0.28), transparent 24%);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.badge-unlock-medal::after {
+  content: '';
+  position: absolute;
+  top: -24%;
+  left: -78%;
+  width: 38%;
+  height: 150%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.95), rgba(255,255,255,0.42), transparent);
+  transform: rotate(24deg);
+  animation: badgeUnlockSweep 2.25s ease-in-out infinite;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.badge-unlock-progress {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(253,224,71,0.32), transparent 34%),
+    linear-gradient(180deg, #FFFBEB 0%, #FFF7ED 100%);
+  border: 1.5px solid #FDE68A;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.82), 0 4px 14px rgba(245,158,11,0.10);
+  padding: 13px 14px 14px;
+  margin-bottom: 18px;
+}
+
+.badge-unlock-progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.42) 44%, transparent 68%);
+  transform: translateX(-100%);
+  animation: badgeUnlockPanelSweep 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes badgeUnlockSweep {
+  0%, 24% { left: -78%; opacity: 0; }
+  42% { opacity: 1; }
+  66%, 100% { left: 132%; opacity: 0; }
+}
+
+@keyframes badgeUnlockPanelSweep {
+  0%, 32% { transform: translateX(-100%); opacity: 0; }
+  48% { opacity: 0.9; }
+  72%, 100% { transform: translateX(100%); opacity: 0; }
+}
+
 /* ── Daily tasks ── */
 .daily-task-panel {
   margin-bottom: 16px;

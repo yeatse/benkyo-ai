@@ -1,21 +1,27 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useUserStore from '../store/userStore';
 import useGameStore, { computeLevel, XP_PER_LEVEL } from '../store/gameStore';
 import useCourseStore from '../store/courseStore';
+import useVocabStore from '../store/vocabStore';
+import useBadgeStore from '../store/badgeStore';
 import EditProfileSheet from '../components/Profile/EditProfileSheet';
 import BackpackSheet from '../components/Profile/BackpackSheet';
+import BadgeSheet from '../components/Profile/BadgeSheet';
+import BadgeUnlockModal from '../components/Profile/BadgeUnlockModal';
 import HeartDisplay from '../components/UI/HeartDisplay';
 import CheckInModal from '../components/UI/CheckInModal';
 import DailyTaskSection from '../components/Profile/DailyTaskSection';
 import { useIcon } from '../lib/icons';
+import { buildBadgeProgress, getUnlockableBadgeIds } from '../lib/badge-progress';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { profile, currentStreak } = useUserStore();
   const coins = useUserStore(s => s.coins);
+  const inventory = useUserStore(s => s.inventory);
   const lastCheckIn = useUserStore(s => s.lastCheckIn);
   const checkIn = useUserStore(s => s.checkIn);
   const lvImg = useIcon('ui/lv.png');
@@ -30,9 +36,14 @@ export default function ProfilePage() {
   const coinImg = useIcon('item/coin.png');
   const totalXp = useGameStore(s => s.totalXp);
   const levelProgress = useGameStore(s => s.levelProgress);
+  const words = useVocabStore(s => s.words);
+  const badgeCounters = useBadgeStore(s => s.counters);
+  const unlockedBadges = useBadgeStore(s => s.unlocked);
   const [showEdit, setShowEdit] = useState(false);
   const [showBackpack, setShowBackpack] = useState(false);
+  const [showBadges, setShowBadges] = useState(false);
   const [checkInCoins, setCheckInCoins] = useState(null); // null = not shown
+  const [badgeUnlockQueue, setBadgeUnlockQueue] = useState([]);
   const chapters = useCourseStore(s => s.chapters);
 
   const level = computeLevel(totalXp);
@@ -42,6 +53,17 @@ export default function ProfilePage() {
   const completedCount = Object.values(levelProgress).filter(v => v.completed).length;
   const totalLevels = chapters.reduce((sum, ch) => sum + ch.levels.length, 0);
   const totalStars = Object.values(levelProgress).reduce((sum, v) => sum + (v.stars ?? 0), 0);
+  const badges = useMemo(() => buildBadgeProgress({
+    inventory,
+    words,
+    totalXp,
+    levelProgress,
+    chapters,
+    counters: badgeCounters,
+    unlocked: unlockedBadges,
+  }), [badgeCounters, chapters, inventory, levelProgress, totalXp, unlockedBadges, words]);
+  const unlockedBadgeCount = badges.filter(badge => badge.unlocked).length;
+  const badgeUnlockText = `已解锁 ${unlockedBadgeCount}/${badges.length}`;
 
   const today = new Date().toISOString().slice(0, 10);
   const checkedInToday = lastCheckIn === today;
@@ -51,6 +73,40 @@ export default function ProfilePage() {
     const awarded = checkIn();
     if (awarded > 0) setCheckInCoins(awarded);
   };
+
+  const queueBadgeUnlocks = useCallback(() => {
+    const userState = useUserStore.getState();
+    const gameState = useGameStore.getState();
+    const courseState = useCourseStore.getState();
+    const vocabState = useVocabStore.getState();
+
+    useBadgeStore.getState().syncCoinBaseline(userState.coins);
+
+    const badgeState = useBadgeStore.getState();
+    const latestBadges = buildBadgeProgress({
+      inventory: userState.inventory,
+      words: vocabState.words,
+      totalXp: gameState.totalXp,
+      levelProgress: gameState.levelProgress,
+      chapters: courseState.chapters,
+      counters: badgeState.counters,
+      unlocked: badgeState.unlocked,
+    });
+    const unlockableIds = getUnlockableBadgeIds(latestBadges, badgeState.unlocked);
+    const newlyUnlockedIds = badgeState.unlockBadges(unlockableIds);
+    if (newlyUnlockedIds.length === 0) return;
+
+    const badgeById = new Map(latestBadges.map(badge => [badge.id, { ...badge, unlocked: true }]));
+    setBadgeUnlockQueue(prev => {
+      const queuedIds = new Set(prev.map(badge => badge.id));
+      const nextItems = newlyUnlockedIds
+        .filter(id => !queuedIds.has(id))
+        .map(id => badgeById.get(id))
+        .filter(Boolean);
+      return nextItems.length > 0 ? [...prev, ...nextItems] : prev;
+    });
+  }, []);
+
   const genderIcon  = profile?.gender === 'male' ? '♂' : profile?.gender === 'female' ? '♀' : '';
   const genderColor = profile?.gender === 'male' ? '#3B82F6' : '#EC4899';
 
@@ -60,7 +116,9 @@ export default function ProfilePage() {
   const settingsBtnRef = useRef(null);
   const editBtnRef = useRef(null);
   const backpackBtnRef = useRef(null);
+  const badgeBtnRef = useRef(null);
   const checkInBtnRef = useRef(null);
+  const checkedBadgesOnEnterRef = useRef(false);
   // Floating bubble refs
   const b1 = useRef(null);
   const b2 = useRef(null);
@@ -74,6 +132,12 @@ export default function ProfilePage() {
       .to(ref.current, { scale: 1, duration: 0.18, ease: 'back.out(2.5)' })
       .call(fn);
   };
+
+  useEffect(() => {
+    if (checkedBadgesOnEnterRef.current) return;
+    checkedBadgesOnEnterRef.current = true;
+    queueBadgeUnlocks();
+  }, [queueBadgeUnlocks]);
 
   useGSAP(() => {
     gsap.set([headerRef.current, statsRef.current, progressRef.current], { opacity: 0, y: 22 });
@@ -257,6 +321,25 @@ export default function ProfilePage() {
             <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--tp)' }}>打开背包</span>
           </button>
 
+          {/* Badge button */}
+          <button
+            ref={badgeBtnRef}
+            onClick={() => pressAndRun(badgeBtnRef, () => setShowBadges(true))}
+            style={{
+              width: '100%', padding: '10px 0', marginBottom: 8,
+              borderRadius: 14, border: '1.5px solid #BFDBFE',
+              background: '#EFF6FF',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              cursor: 'pointer',
+            }}
+          >
+            <img src={collectStarImg} alt="徽章" width={20} height={20} style={{ objectFit: 'contain' }} />
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#2563EB' }}>徽章</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#1D4ED8', background: '#DBEAFE', border: '1px solid #BFDBFE', borderRadius: 8, padding: '1px 7px' }}>
+              {badgeUnlockText}
+            </span>
+          </button>
+
           {/* Check-in button */}
           <button
             ref={checkInBtnRef}
@@ -300,7 +383,7 @@ export default function ProfilePage() {
 
       {/* Course progress */}
       <div ref={progressRef} style={{ margin: '16px 16px 28px' }}>
-        <DailyTaskSection />
+        <DailyTaskSection onRewardDismiss={queueBadgeUnlocks} />
 
         <h3 style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
           课程进度
@@ -355,9 +438,27 @@ export default function ProfilePage() {
       </div>
 
       {showEdit && <EditProfileSheet onClose={() => setShowEdit(false)} />}
-      {showBackpack && <BackpackSheet onClose={() => setShowBackpack(false)} />}
+      {showBackpack && (
+        <BackpackSheet
+          onClose={() => setShowBackpack(false)}
+          onBadgeProgressChange={queueBadgeUnlocks}
+        />
+      )}
+      {showBadges && <BadgeSheet badges={badges} onClose={() => setShowBadges(false)} />}
       {checkInCoins !== null && (
-        <CheckInModal coins={checkInCoins} onDismiss={() => setCheckInCoins(null)} />
+        <CheckInModal
+          coins={checkInCoins}
+          onDismiss={() => {
+            setCheckInCoins(null);
+            queueBadgeUnlocks();
+          }}
+        />
+      )}
+      {badgeUnlockQueue[0] && (
+        <BadgeUnlockModal
+          badge={badgeUnlockQueue[0]}
+          onDismiss={() => setBadgeUnlockQueue(queue => queue.slice(1))}
+        />
       )}
     </div>
   );

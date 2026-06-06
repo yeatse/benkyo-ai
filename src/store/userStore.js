@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import useDailyTaskStore, { DAILY_TASK_EVENTS } from './dailyTaskStore';
+import useBadgeStore from './badgeStore';
 
 const toDateStr = (d = new Date()) => d.toISOString().slice(0, 10);
 
@@ -87,6 +88,7 @@ const useUserStore = create(
 
       addCoins(amount) {
         if (amount <= 0) return;
+        useBadgeStore.getState().addCoinsEarned(amount);
         set(s => ({ coins: s.coins + amount }));
       },
 
@@ -95,6 +97,7 @@ const useUserStore = create(
         if (amount <= 0) return false;
 
         if (reward.type === 'coins') {
+          useBadgeStore.getState().addCoinsEarned(amount);
           set(s => ({ coins: s.coins + amount }));
           return true;
         }
@@ -117,6 +120,7 @@ const useUserStore = create(
         const today = toDateStr();
         if (get().lastCheckIn === today) return 0;
         const amount = Math.floor(Math.random() * 61) + 60; // 60~120
+        useBadgeStore.getState().addCoinsEarned(amount);
         set(s => ({ coins: s.coins + amount, lastCheckIn: today }));
         return amount;
       },
@@ -169,6 +173,7 @@ const useUserStore = create(
           inventory: { ...inventory, cake: cakeCount - 1 },
           nextHeartAt: null, // hearts will be >= MAX_HEARTS now; pause regen
         });
+        useBadgeStore.getState().recordCakeEaten(1);
         useDailyTaskStore.getState().recordEvent(DAILY_TASK_EVENTS.CAKE_USED, 1);
         return true;
       },
