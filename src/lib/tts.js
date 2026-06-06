@@ -1,3 +1,5 @@
+import { invoke } from '@tauri-apps/api/core';
+
 const CACHE_DB_NAME = 'benkyo-ai-tts-cache';
 const CACHE_DB_VERSION = 1;
 const CACHE_STORE_NAME = 'speech-audio';
@@ -71,6 +73,12 @@ export async function requestTtsAudioBlob(text, config, { signal } = {}) {
   const requestSignal = createTimeoutSignal(signal);
 
   try {
+    if (profile.provider === 'volcengine-doubao-tts') {
+      const audioBlob = await requestVolcengineTtsBlob(profile, normalizedText, requestSignal.signal);
+      if (!audioBlob) throw new Error('未解析到可播放的音频数据');
+      return audioBlob;
+    }
+
     const res = await fetch(profile.baseUrl, {
       method: 'POST',
       headers: createTtsRequestHeaders(profile),
@@ -90,6 +98,26 @@ export async function requestTtsAudioBlob(text, config, { signal } = {}) {
   } finally {
     requestSignal.cleanup();
   }
+}
+
+async function requestVolcengineTtsBlob(profile, text, signal) {
+  if (signal.aborted) throw createAbortError();
+  if (!globalThis.__TAURI_INTERNALS__) {
+    throw new Error('豆包语音需要在 Tauri 客户端中使用，请通过 npm run tauri:dev 测试');
+  }
+
+  const responseText = await invoke('proxy_volcengine_tts', {
+    endpoint: profile.baseUrl,
+    apiKey: profile.apiKey,
+    resourceId: profile.modelId,
+    body: createTtsRequestBody(profile, text),
+  });
+
+  if (signal.aborted) throw createAbortError();
+
+  const data = parseTtsJsonPayload(responseText);
+  if (!data) throw new Error('火山语音响应不是有效 JSON');
+  return extractTtsAudioBlobFromData(data);
 }
 
 function isSupportedTtsProvider(provider) {
@@ -170,9 +198,9 @@ function createTtsRequestBody(profile, text) {
           sample_rate: profile.sampleRate,
           bit_rate: normalizeBitRateBps(profile.bitRate),
         },
-        additions: {
+        additions: JSON.stringify({
           explicit_language: 'ja',
-        },
+        }),
       },
     };
   }
@@ -256,15 +284,10 @@ async function extractTtsAudioBlob(res, signal) {
   if (contentType.includes('audio/')) return await res.blob();
 
   const data = await res.json();
-  const providerError = getTtsResponseErrorMessage(data);
-  if (providerError) throw new Error(providerError);
+  const inlineAudioBlob = extractTtsAudioBlobFromData(data);
+  if (inlineAudioBlob) return inlineAudioBlob;
 
   const outputAudio = data?.output?.audio;
-  const hexAudio = data?.output?.data?.audio || data?.data?.audio;
-  if (isHexString(hexAudio)) {
-    return hexToBlob(hexAudio, 'audio/mpeg');
-  }
-
   const audioUrl =
     outputAudio?.url ||
     data?.output?.audio_url ||
@@ -280,12 +303,29 @@ async function extractTtsAudioBlob(res, signal) {
     return await audioRes.blob();
   }
 
+  return null;
+}
+
+function extractTtsAudioBlobFromData(data) {
+  const providerError = getTtsResponseErrorMessage(data);
+  if (providerError) throw new Error(providerError);
+
+  const outputAudio = data?.output?.audio;
+  const hexAudio = data?.output?.data?.audio || data?.data?.audio;
+  if (isHexString(hexAudio)) {
+    return hexToBlob(hexAudio, 'audio/mpeg');
+  }
+
   const base64Audio =
     outputAudio?.data ||
     (typeof outputAudio === 'string' ? outputAudio : '') ||
     data?.audio ||
     data?.data?.audio ||
     (typeof data?.data === 'string' ? data.data : '');
+
+  if (Array.isArray(data?.data_chunks) && data.data_chunks.length > 0) {
+    return base64ChunksToBlob(data.data_chunks, 'audio/mpeg');
+  }
 
   if (typeof base64Audio === 'string' && base64Audio.length > 0) {
     return base64ToBlob(base64Audio, 'audio/mpeg');
@@ -294,12 +334,27 @@ async function extractTtsAudioBlob(res, signal) {
   return null;
 }
 
+function createAbortError() {
+  return new DOMException('TTS 请求已取消', 'AbortError');
+}
+
 function parseJson(text) {
   try {
     return JSON.parse(text);
   } catch {
     return null;
   }
+}
+
+function parseTtsJsonPayload(payload) {
+  if (payload && typeof payload === 'object') return payload;
+
+  let parsed = payload;
+  for (let i = 0; i < 2 && typeof parsed === 'string'; i += 1) {
+    parsed = parseJson(parsed);
+  }
+
+  return parsed && typeof parsed === 'object' ? parsed : null;
 }
 
 function getTtsResponseErrorMessage(data) {
@@ -350,6 +405,26 @@ function base64ToBlob(base64, mimeType) {
   }
 
   return new Blob([bytes], { type: mimeType });
+}
+
+function base64ChunksToBlob(chunks, mimeType) {
+  const byteArrays = chunks
+    .filter(chunk => typeof chunk === 'string' && chunk.length > 0)
+    .map(chunk => base64ToBytes(chunk));
+
+  return new Blob(byteArrays, { type: mimeType });
+}
+
+function base64ToBytes(base64) {
+  const normalized = base64.includes(',') ? base64.split(',')[1] : base64;
+  const binary = atob(normalized);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return bytes;
 }
 
 let cacheDbPromise = null;
