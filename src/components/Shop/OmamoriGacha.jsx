@@ -8,6 +8,7 @@ import {
   OMAMORI_ITEMS,
   OMAMORI_RARITY_ORDER,
   drawOmamori,
+  getOmamoriLore,
   getOmamoriRarity,
 } from '../../data/omamoriGacha';
 import { useIcon, useIconResolver } from '../../lib/icons';
@@ -32,13 +33,16 @@ export default function OmamoriGacha() {
   const coins = useUserStore(s => s.coins);
   const spendCoins = useUserStore(s => s.spendCoins);
   const recordOmamoriDraw = useUserStore(s => s.recordOmamoriDraw);
+  const markOmamoriDetailViewed = useUserStore(s => s.markOmamoriDetailViewed);
   const omamoriCollection = useUserStore(s => s.omamoriCollection ?? {});
+  const omamoriViewedDetails = useUserStore(s => s.omamoriViewedDetails ?? {});
   const coinImg = useIcon('item/coin.png');
   const gachaIntroImg = useIcon('sd/gacha-intro.png');
   const resolveIcon = useIconResolver();
   const [phase, setPhase] = useState('idle');
   const [result, setResult] = useState(null);
   const [notice, setNotice] = useState(null);
+  const [selectedOmamori, setSelectedOmamori] = useState(null);
 
   const rootRef = useRef(null);
   const stageRef = useRef(null);
@@ -54,13 +58,20 @@ export default function OmamoriGacha() {
     return [...OMAMORI_ITEMS]
       .map(item => {
         const count = omamoriCollection[item.id] ?? 0;
-        return { ...item, count, owned: count > 0 };
+        const owned = count > 0;
+        return {
+          ...item,
+          count,
+          owned,
+          isNew: owned && !omamoriViewedDetails[item.id],
+          lore: getOmamoriLore(item.id),
+        };
       })
       .sort((a, b) => {
         if (a.owned !== b.owned) return a.owned ? -1 : 1;
         return rank.get(a.rarity) - rank.get(b.rarity);
       });
-  }, [omamoriCollection]);
+  }, [omamoriCollection, omamoriViewedDetails]);
 
   const collectionStats = useMemo(() => {
     const owned = collectionItems.filter(item => item.owned).length;
@@ -119,10 +130,11 @@ export default function OmamoriGacha() {
     }
 
     const nextResult = drawOmamori();
-    recordOmamoriDraw(nextResult.id);
+    const nextCount = recordOmamoriDraw(nextResult.id);
+    const resultWithState = { ...nextResult, isNew: nextCount === 1 };
     setNotice(null);
-    setResult(nextResult);
-    setReelItems(buildResultReel(nextResult));
+    setResult(resultWithState);
+    setReelItems(buildResultReel(resultWithState));
     setDrawKey(key => key + 1);
     setPhase('revealed');
   };
@@ -131,6 +143,16 @@ export default function OmamoriGacha() {
     setResult(null);
     setReelItems([]);
     setPhase('idle');
+  };
+
+  const openOmamoriDetail = (item) => {
+    if (!item.owned) return;
+    markOmamoriDetailViewed(item.id);
+    setSelectedOmamori(item);
+  };
+
+  const closeOmamoriDetail = () => {
+    setSelectedOmamori(null);
   };
 
   return (
@@ -193,22 +215,32 @@ export default function OmamoriGacha() {
           <span>御守收藏</span>
           <span>{collectionStats.owned}/{OMAMORI_ITEMS.length} 種・累计 {collectionStats.total} 枚</span>
         </div>
+        <p className="omamori-section-hint">点击御守，查看它的含义与文化小知识。</p>
 
         <div className="omamori-lineup-grid">
           {collectionItems.map(item => {
             const rarity = getOmamoriRarity(item.rarity);
             return (
-              <div
+              <button
+                type="button"
                 key={item.id}
                 data-omamori-collection
-                className={`omamori-collection-item omamori-collection-item--${item.rarity.toLowerCase()} ${item.owned ? 'omamori-collection-item--owned' : 'omamori-collection-item--locked'}`}
+                data-sfx={item.owned ? SOUND_EFFECT_TYPES.WORD_SELECTED : 'none'}
+                disabled={!item.owned}
+                onClick={() => openOmamoriDetail(item)}
+                className={`omamori-collection-item omamori-collection-item--${item.rarity.toLowerCase()} ${item.owned ? 'omamori-collection-item--owned' : 'omamori-collection-item--locked'} ${item.isNew ? 'omamori-collection-item--new' : ''}`}
                 style={{ '--rarity-color': rarity.color, '--rarity-bg': rarity.bg, '--rarity-glow': rarity.glow }}
+                aria-label={`${item.name}，${item.rarity}，累计${item.count}枚`}
               >
                 <div className="omamori-collection-item__figure">
                   <img src={resolveIcon(item.iconPath)} alt={item.name} />
+                  <div className="omamori-collection-item__rarity">{item.rarity}</div>
                 </div>
-                <span>累计{item.count}枚</span>
-              </div>
+                <span className="omamori-collection-item__meta">
+                  {item.isNew && <span className="omamori-collection-item__new">New</span>}
+                  <span className="omamori-collection-item__count">累计{item.count}枚</span>
+                </span>
+              </button>
             );
           })}
         </div>
@@ -224,6 +256,14 @@ export default function OmamoriGacha() {
           canDrawAgain={canAfford}
           onClose={closeResult}
           onDrawAgain={handleDraw}
+        />
+      )}
+
+      {selectedOmamori && (
+        <OmamoriDetailModal
+          key={selectedOmamori.id}
+          item={selectedOmamori}
+          onClose={closeOmamoriDetail}
         />
       )}
     </div>
@@ -340,7 +380,9 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
       <div ref={cardRef} className="omamori-result-card">
         <div ref={particleRef} className="omamori-result-particles" />
         <div className="omamori-result-card__shine" />
-        <div className="omamori-result-rarity">{settled ? result.rarity : '抽選'}</div>
+        <div className={`omamori-result-new-slot ${settled && result.isNew ? 'omamori-result-new-slot--show' : ''}`}>
+          <span>New!!</span>
+        </div>
         <div className="omamori-result-label">{settled ? '抽選結果' : '御守抽選中'}</div>
 
         <div className="omamori-result-reel">
@@ -349,16 +391,19 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
             <div ref={reelTrackRef} className="omamori-result-reel__track">
               {reelItems.map((item, index) => {
                 const itemRarity = getOmamoriRarity(item.rarity);
+                const itemIcon = resolveIcon(item.iconPath);
                 const isTarget = index === targetIndex;
                 return (
                   <div
                     key={item.reelKey ?? `${index}-${item.id}`}
                     ref={isTarget ? reelTargetRef : null}
-                    className={`omamori-result-reel__item ${isTarget ? 'omamori-result-reel__item--target' : ''} ${settled && isTarget ? 'omamori-result-reel__item--settled' : ''}`}
+                    className={`omamori-result-reel__item omamori-result-reel__item--${item.rarity.toLowerCase()} ${isTarget ? 'omamori-result-reel__item--target' : ''} ${settled && isTarget ? 'omamori-result-reel__item--settled' : ''}`}
                     style={{ '--rarity-color': itemRarity.color, '--rarity-bg': itemRarity.bg, '--rarity-glow': itemRarity.glow }}
                   >
-                    <span>{item.rarity}</span>
-                    <img src={resolveIcon(item.iconPath)} alt={item.name} />
+                    <div className="omamori-result-reel__figure" style={{ '--omamori-mask': `url(${itemIcon})` }}>
+                      <img src={itemIcon} alt={item.name} />
+                    </div>
+                    <span className="omamori-result-reel__rarity">{item.rarity}</span>
                   </div>
                 );
               })}
@@ -391,6 +436,71 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
           </button>
         </div>
       </div>
+    </div>,
+    document.body
+  );
+}
+
+function OmamoriDetailModal({ item, onClose }) {
+  const resolveIcon = useIconResolver();
+  const overlayRef = useRef(null);
+  const imageRef = useRef(null);
+  const panelRef = useRef(null);
+  const rarity = getOmamoriRarity(item.rarity);
+
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    const image = imageRef.current;
+    const panel = panelRef.current;
+
+    gsap.set(overlay, { opacity: 0 });
+    gsap.set(image, { opacity: 0, y: 128, scale: 0.34, rotate: -5 });
+    gsap.set(panel, { opacity: 0, y: 34 });
+
+    const tl = gsap.timeline();
+    tl.to(overlay, { opacity: 1, duration: 0.18, ease: 'power2.out' });
+    tl.to(image, { opacity: 1, y: 0, scale: 1, rotate: 0, duration: 0.62, ease: 'back.out(1.55)' }, 0.06);
+    tl.to(panel, { opacity: 1, y: 0, duration: 0.36, ease: 'power2.out' }, 0.32);
+
+    return () => tl.kill();
+  }, [item.id]);
+
+  const dismiss = () => {
+    const tl = gsap.timeline({ onComplete: onClose });
+    tl.to(panelRef.current, { opacity: 0, y: 28, duration: 0.2, ease: 'power2.in' });
+    tl.to(imageRef.current, { opacity: 0, y: 76, scale: 0.72, rotate: 3, duration: 0.24, ease: 'power2.in' }, '-=0.12');
+    tl.to(overlayRef.current, { opacity: 0, duration: 0.16, ease: 'power2.in' }, '-=0.08');
+  };
+
+  return createPortal(
+    <div
+      ref={overlayRef}
+      data-ui-click-sfx
+      className={`omamori-detail-overlay omamori-detail-overlay--${item.rarity.toLowerCase()}`}
+      style={{ '--rarity-color': rarity.color, '--rarity-bg': rarity.bg, '--rarity-glow': rarity.glow }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${item.name} の御守詳細`}
+    >
+      <div className="omamori-detail-overlay__glow" aria-hidden="true" />
+      <div className="omamori-detail-hero" aria-hidden="true">
+        <div className="omamori-detail-hero__halo" />
+        <img ref={imageRef} className="omamori-detail-image" src={resolveIcon(item.iconPath)} alt="" />
+      </div>
+
+      <section ref={panelRef} className="omamori-detail-panel">
+        <div className="omamori-detail-panel__shine" aria-hidden="true" />
+        <div className="omamori-detail-heading">
+          <span className="omamori-detail-rarity">{item.rarity}</span>
+          <span className="omamori-detail-count">{item.count > 0 ? `累计${item.count}枚` : '未获得'}</span>
+        </div>
+        <h2>{item.name}</h2>
+        <p className="omamori-detail-subtitle">御守・護身符</p>
+        <p className="omamori-detail-lore">{item.lore}</p>
+        <button type="button" onClick={dismiss} className="btn-press omamori-detail-close">
+          关闭
+        </button>
+      </section>
     </div>,
     document.body
   );

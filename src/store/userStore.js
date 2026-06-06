@@ -30,6 +30,7 @@ const useUserStore = create(
 
       // ── Omamori collection ───────────────────────────
       omamoriCollection: {},
+      omamoriViewedDetails: {},
 
       // ── Learning profile (persisted from onboarding wizard) ──
       learningProfile: null, // { level, pace, purpose, style } | null
@@ -118,6 +119,17 @@ const useUserStore = create(
           };
         });
         return nextCount;
+      },
+
+      markOmamoriDetailViewed(itemId) {
+        if (!itemId) return false;
+        set(s => ({
+          omamoriViewedDetails: {
+            ...(s.omamoriViewedDetails ?? {}),
+            [itemId]: true,
+          },
+        }));
+        return true;
       },
 
       grantReward(reward) {
@@ -253,6 +265,7 @@ const useUserStore = create(
         coins: s.coins,
         inventory: s.inventory,
         omamoriCollection: s.omamoriCollection,
+        omamoriViewedDetails: s.omamoriViewedDetails,
         xpBoost: s.xpBoost,
         lastCheckIn: s.lastCheckIn,
         learningProfile: s.learningProfile,
