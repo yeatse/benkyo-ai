@@ -828,6 +828,75 @@ rt {
   padding-bottom: 92px;
 }
 
+.shop-header-art {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.shop-header-art__image {
+  position: absolute;
+  object-fit: contain;
+  opacity: 0;
+  transform-origin: center bottom;
+  transition: opacity 0.16s ease, transform 0.2s ease;
+  will-change: opacity, transform;
+}
+
+.shop-header-art__image--shopping {
+  right: -12px;
+  bottom: -22px;
+  width: 172px;
+  height: 172px;
+  transform: translateY(4px) scale(0.985);
+}
+
+.shop-header-art__image--omamori {
+  right: 14px;
+  bottom: -20px;
+  width: 142px;
+  height: 172px;
+  filter: drop-shadow(0 14px 18px rgba(127,29,29,0.22));
+  transform: translateY(4px) rotate(8deg) scale(0.985);
+}
+
+.shop-header-art__image.is-active {
+  opacity: 1;
+}
+
+.shop-header-art__image--shopping.is-active {
+  transform: translateY(0) scale(1);
+}
+
+.shop-header-art__image--omamori.is-active {
+  transform: translateY(0) rotate(8deg) scale(1);
+}
+
+.shop-title-icon {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.shop-title-icon img {
+  position: absolute;
+  inset: 0;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(0.94);
+  transition: opacity 0.14s ease, transform 0.18s ease;
+}
+
+.shop-title-icon img.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
 .shop-view-switcher {
   position: absolute;
   left: 16px;
@@ -1219,6 +1288,40 @@ rt {
   font-size: 12px;
   line-height: 1.45;
   font-weight: 800;
+}
+
+.omamori-lineup-loading {
+  min-height: 42px;
+  color: var(--tp);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.omamori-lineup-loading__dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.omamori-lineup-loading__dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.42;
+  animation: omamoriLoadingDot 0.9s ease-in-out infinite;
+}
+
+.omamori-lineup-loading__dots i:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.omamori-lineup-loading__dots i:nth-child(3) {
+  animation-delay: 0.24s;
 }
 
 .omamori-lineup-grid {
@@ -1913,6 +2016,11 @@ rt {
   0%, 42% { left: -68%; opacity: 0; }
   56% { opacity: 0.9; }
   78%, 100% { left: 132%; opacity: 0; }
+}
+
+@keyframes omamoriLoadingDot {
+  0%, 100% { transform: translateY(0); opacity: 0.36; }
+  48% { transform: translateY(-4px); opacity: 0.95; }
 }
 
 @media (max-width: 380px) {

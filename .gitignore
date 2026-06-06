@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local original image backups; not imported by Vite icon globs
+/src/assets/original-benkyochan-icons-*/
+
 # Local AI instructions and repository automation
 .claude/
 .github/
