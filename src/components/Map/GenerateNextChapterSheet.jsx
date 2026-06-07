@@ -6,6 +6,7 @@ import useUserStore from '../../store/userStore';
 import useAiStore from '../../store/aiStore';
 import useNextChapterGenStore from '../../store/nextChapterGenStore';
 import { generateChapterRecommendations } from '../../lib/generate-chapter';
+import { acquireKeepScreenAwake, releaseKeepScreenAwake } from '../../lib/keep-screen-awake';
 import { useIcon } from '../../lib/icons';
 import EstimatedProgressBar from '../UI/EstimatedProgressBar';
 
@@ -479,6 +480,7 @@ export default function GenerateNextChapterSheet({ onClose, onDone }) {
 
     const controller = new AbortController();
     abortRef.current = controller;
+    const keepAwakeToken = acquireKeepScreenAwake('next-chapter-recommendations');
 
     try {
       const aiConfig    = useAiStore.getState().getConfig();
@@ -499,6 +501,11 @@ export default function GenerateNextChapterSheet({ onClose, onDone }) {
       console.error('[GenerateNextChapterSheet] error:', err);
       setLoadError(err?.message || '推荐生成失败，请重试');
       setPhase('error');
+    } finally {
+      releaseKeepScreenAwake(keepAwakeToken);
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+      }
     }
   }, []);
 

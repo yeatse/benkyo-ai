@@ -13,6 +13,7 @@ import LevelNode from './LevelNode';
 import CreateCourseSheet from './CreateCourseSheet';
 import GenerateNextChapterSheet from './GenerateNextChapterSheet';
 import { generateLevelQuestions } from '../../lib/generate-chapter';
+import { acquireKeepScreenAwake, releaseKeepScreenAwake } from '../../lib/keep-screen-awake';
 import EstimatedProgressBar from '../UI/EstimatedProgressBar';
 import { useIcon } from '../../lib/icons';
 
@@ -547,20 +548,26 @@ export default function LevelMap() {
     if (!chapter) throw new Error('章节不存在');
 
     const aiCfg = useAiStore.getState().getConfig();
-    const questions = await generateLevelQuestions(aiCfg, chapter, levelIdx, {
-      onProgress,
-      signal: AbortSignal.timeout(300_000),
-    });
+    const keepAwakeToken = acquireKeepScreenAwake('level-generation');
 
-    // Save to courseStore: add questions + unlock the level
-    useCourseStore.getState().updateChapter(chapterId, ch => ({
-      ...ch,
-      levels: ch.levels.map((lv, idx) =>
-        idx === levelIdx ? { ...lv, questions, locked: undefined } : lv
-      ),
-    }));
+    try {
+      const questions = await generateLevelQuestions(aiCfg, chapter, levelIdx, {
+        onProgress,
+        signal: AbortSignal.timeout(300_000),
+      });
 
-    navigate(`/lesson/${chapterId}/${selectedLevel.level.id}`);
+      // Save to courseStore: add questions + unlock the level
+      useCourseStore.getState().updateChapter(chapterId, ch => ({
+        ...ch,
+        levels: ch.levels.map((lv, idx) =>
+          idx === levelIdx ? { ...lv, questions, locked: undefined } : lv
+        ),
+      }));
+
+      navigate(`/lesson/${chapterId}/${selectedLevel.level.id}`);
+    } finally {
+      releaseKeepScreenAwake(keepAwakeToken);
+    }
   }, [selectedLevel, chapters, navigate]);
 
   const isLevelUnlocked = (chapter, levelIdx) => {

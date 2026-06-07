@@ -5,6 +5,7 @@ import useCourseStore from '../../store/courseStore';
 import useAiStore from '../../store/aiStore';
 import useUserStore from '../../store/userStore';
 import { generateFirstChapter } from '../../lib/generate-chapter';
+import { acquireKeepScreenAwake, releaseKeepScreenAwake } from '../../lib/keep-screen-awake';
 import { useIcon } from '../../lib/icons';
 import EstimatedProgressBar from '../UI/EstimatedProgressBar';
 
@@ -316,6 +317,7 @@ export default function CreateCourseSheet({ onClose, onDone }) {
 
     const controller = new AbortController();
     abortRef.current = controller;
+    const keepAwakeToken = acquireKeepScreenAwake('first-chapter-generation');
 
     try {
       const chapter = await generateFirstChapter(
@@ -338,6 +340,11 @@ export default function CreateCourseSheet({ onClose, onDone }) {
       console.error('[CreateCourseSheet] generation error:', err);
       setError(err?.message || '课程生成失败，请检查 AI 配置后重试。');
       setPhase('error');
+    } finally {
+      releaseKeepScreenAwake(keepAwakeToken);
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+      }
     }
   };
 

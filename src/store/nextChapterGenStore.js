@@ -3,6 +3,7 @@ import useAiStore from './aiStore';
 import useCourseStore from './courseStore';
 import useUserStore from './userStore';
 import { generateNextChapter } from '../lib/generate-chapter';
+import { acquireKeepScreenAwake, releaseKeepScreenAwake } from '../lib/keep-screen-awake';
 
 const INITIAL_STATE = {
   status: 'idle',
@@ -80,6 +81,8 @@ const useNextChapterGenStore = create((set, get) => ({
   },
 
   async _run({ requestId, request, aiConfig, chapters, learningProfile }) {
+    const keepAwakeToken = acquireKeepScreenAwake('next-chapter-generation');
+
     try {
       const chapter = await generateNextChapter(aiConfig, {
         recentChapters: chapters,
@@ -119,6 +122,8 @@ const useNextChapterGenStore = create((set, get) => ({
         status: 'error',
         error: err?.message || '章节生成失败，请检查 AI 配置后重试。',
       });
+    } finally {
+      releaseKeepScreenAwake(keepAwakeToken);
     }
   },
 }));

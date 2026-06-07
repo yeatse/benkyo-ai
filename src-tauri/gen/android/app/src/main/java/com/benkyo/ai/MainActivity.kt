@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -16,6 +18,7 @@ import androidx.core.view.updatePadding
 
 class MainActivity : TauriActivity() {
   private var launchOverlay: View? = null
+  private val androidBridge = BenkyoAndroidBridge()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
@@ -24,6 +27,7 @@ class MainActivity : TauriActivity() {
 
   override fun onWebViewCreate(webView: WebView) {
     super.onWebViewCreate(webView)
+    webView.addJavascriptInterface(androidBridge, "BenkyoAndroid")
 
     val contentView = findViewById<View>(android.R.id.content)
 
@@ -135,6 +139,19 @@ class MainActivity : TauriActivity() {
 
       override fun onViewDetachedFromWindow(view: View) = Unit
     })
+  }
+
+  private inner class BenkyoAndroidBridge {
+    @JavascriptInterface
+    fun setKeepScreenOn(enabled: Boolean) {
+      runOnUiThread {
+        if (enabled) {
+          window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+          window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+      }
+    }
   }
 
   companion object {

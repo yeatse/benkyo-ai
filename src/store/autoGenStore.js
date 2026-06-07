@@ -3,6 +3,7 @@ import useCourseStore from './courseStore';
 import useAiStore from './aiStore';
 import useNextChapterGenStore from './nextChapterGenStore';
 import { generateLevelQuestions } from '../lib/generate-chapter';
+import { acquireKeepScreenAwake, releaseKeepScreenAwake } from '../lib/keep-screen-awake';
 
 // Module-level abort controller (non-serializable, lives outside Zustand state)
 let _abortCtrl = null;
@@ -113,122 +114,130 @@ const useAutoGenStore = create((set, get) => ({
       return;
     }
 
-    set({
-      running: true,
-      totalPending: initialPending.length,
-      doneCount: 0,
-      currentProgress: 0,
-      overallProgress: 0,
-    });
+    if (!get().enabled || _runSeq !== runId) return;
 
-    while (get().enabled && _runSeq === runId) {
-      const pending = collectPendingLevels(skipped);
-      if (pending.length === 0) {
-        if (useNextChapterGenStore.getState().status === 'generating') {
-          set({
-            currentChapterId: null,
-            currentLevelIdx: null,
-            currentMsg: '等待新章节生成…',
-            currentProgress: 0,
-            overallProgress: getOverallProgress(get().doneCount, 0, get().totalPending),
-          });
-          await waitForNextScan();
-          continue;
-        }
-        break;
-      }
+    const keepAwakeToken = acquireKeepScreenAwake('auto-level-generation');
 
-      const totalPending = Math.max(get().totalPending, get().doneCount + pending.length);
-      const { chapterId, levelIdx, key } = pending[0];
-
-      // 重新读取最新章节（可能已被手动生成更新）
-      const freshChapter = useCourseStore.getState().getChapters().find(c => c.id === chapterId);
-      const freshLevel = freshChapter?.levels[levelIdx];
-      // 已被手动生成过，跳过
-      if (!freshChapter || (freshLevel?.questions?.length ?? 0) > 0) {
-        continue;
-      }
-
+    try {
       set({
-        currentChapterId: chapterId,
-        currentLevelIdx:  levelIdx,
-        currentMsg:       '准备中…',
-        currentProgress:  0,
-        overallProgress:  getOverallProgress(get().doneCount, 0, totalPending),
-        totalPending,
+        running: true,
+        totalPending: initialPending.length,
+        doneCount: 0,
+        currentProgress: 0,
+        overallProgress: 0,
       });
 
-      _abortCtrl = new AbortController();
-      const controller = _abortCtrl;
+      while (get().enabled && _runSeq === runId) {
+        const pending = collectPendingLevels(skipped);
+        if (pending.length === 0) {
+          if (useNextChapterGenStore.getState().status === 'generating') {
+            set({
+              currentChapterId: null,
+              currentLevelIdx: null,
+              currentMsg: '等待新章节生成…',
+              currentProgress: 0,
+              overallProgress: getOverallProgress(get().doneCount, 0, get().totalPending),
+            });
+            await waitForNextScan();
+            continue;
+          }
+          break;
+        }
 
-      try {
-        const questions = await generateLevelQuestions(aiConfig, freshChapter, levelIdx, {
-          onProgress: event => {
-            if (get().enabled && _runSeq === runId) {
-              set({
-                currentMsg:      event.message ?? '',
-                currentProgress: event.overallProgress,
-                overallProgress: getOverallProgress(
-                  get().doneCount,
-                  event.overallProgress,
-                  get().totalPending
-                ),
-              });
-            }
-          },
-          signal: controller.signal,
-        });
+        const totalPending = Math.max(get().totalPending, get().doneCount + pending.length);
+        const { chapterId, levelIdx, key } = pending[0];
 
-        // 用户可能在生成期间关闭了开关
-        if (!get().enabled || _runSeq !== runId) break;
+        // 重新读取最新章节（可能已被手动生成更新）
+        const freshChapter = useCourseStore.getState().getChapters().find(c => c.id === chapterId);
+        const freshLevel = freshChapter?.levels[levelIdx];
+        // 已被手动生成过，跳过
+        if (!freshChapter || (freshLevel?.questions?.length ?? 0) > 0) {
+          continue;
+        }
 
-        // 将题目保存到 courseStore
-        useCourseStore.getState().updateChapter(chapterId, ch => ({
-          ...ch,
-          levels: ch.levels.map((lv, idx) =>
-            idx === levelIdx ? { ...lv, questions, locked: undefined } : lv
-          ),
-        }));
-
-        const doneCount = get().doneCount + 1;
         set({
-          doneCount,
-          currentProgress: 1,
-          overallProgress: getOverallProgress(doneCount, 0, get().totalPending),
+          currentChapterId: chapterId,
+          currentLevelIdx:  levelIdx,
+          currentMsg:       '准备中…',
+          currentProgress:  0,
+          overallProgress:  getOverallProgress(get().doneCount, 0, totalPending),
+          totalPending,
         });
-      } catch (err) {
-        // AbortError 表示用户主动停止，直接退出循环
-        if (err?.name === 'AbortError' || !get().enabled || _runSeq !== runId) break;
-        // 其他错误：打印日志，跳过本关继续下一关
-        console.error('[AutoGen] level generation failed:', chapterId, levelIdx, err);
-        skipped.add(key);
-        const doneCount = get().doneCount + 1;
-        set({
-          doneCount,
-          currentProgress: 1,
-          overallProgress: getOverallProgress(doneCount, 0, get().totalPending),
-        });
-      } finally {
-        if (_abortCtrl === controller) {
-          _abortCtrl = null;
+
+        _abortCtrl = new AbortController();
+        const controller = _abortCtrl;
+
+        try {
+          const questions = await generateLevelQuestions(aiConfig, freshChapter, levelIdx, {
+            onProgress: event => {
+              if (get().enabled && _runSeq === runId) {
+                set({
+                  currentMsg:      event.message ?? '',
+                  currentProgress: event.overallProgress,
+                  overallProgress: getOverallProgress(
+                    get().doneCount,
+                    event.overallProgress,
+                    get().totalPending
+                  ),
+                });
+              }
+            },
+            signal: controller.signal,
+          });
+
+          // 用户可能在生成期间关闭了开关
+          if (!get().enabled || _runSeq !== runId) break;
+
+          // 将题目保存到 courseStore
+          useCourseStore.getState().updateChapter(chapterId, ch => ({
+            ...ch,
+            levels: ch.levels.map((lv, idx) =>
+              idx === levelIdx ? { ...lv, questions, locked: undefined } : lv
+            ),
+          }));
+
+          const doneCount = get().doneCount + 1;
+          set({
+            doneCount,
+            currentProgress: 1,
+            overallProgress: getOverallProgress(doneCount, 0, get().totalPending),
+          });
+        } catch (err) {
+          // AbortError 表示用户主动停止，直接退出循环
+          if (err?.name === 'AbortError' || !get().enabled || _runSeq !== runId) break;
+          // 其他错误：打印日志，跳过本关继续下一关
+          console.error('[AutoGen] level generation failed:', chapterId, levelIdx, err);
+          skipped.add(key);
+          const doneCount = get().doneCount + 1;
+          set({
+            doneCount,
+            currentProgress: 1,
+            overallProgress: getOverallProgress(doneCount, 0, get().totalPending),
+          });
+        } finally {
+          if (_abortCtrl === controller) {
+            _abortCtrl = null;
+          }
         }
       }
+
+      if (_runSeq !== runId) return;
+
+      // 全部完成或被停止，重置状态
+      set({
+        enabled:          false,
+        running:          false,
+        currentChapterId: null,
+        currentLevelIdx:  null,
+        currentMsg:       '',
+        currentProgress:  0,
+        overallProgress:  0,
+        doneCount:        0,
+        totalPending:     0,
+      });
+    } finally {
+      releaseKeepScreenAwake(keepAwakeToken);
     }
-
-    if (_runSeq !== runId) return;
-
-    // 全部完成或被停止，重置状态
-    set({
-      enabled:          false,
-      running:          false,
-      currentChapterId: null,
-      currentLevelIdx:  null,
-      currentMsg:       '',
-      currentProgress:  0,
-      overallProgress:  0,
-      doneCount:        0,
-      totalPending:     0,
-    });
   },
 }));
 
