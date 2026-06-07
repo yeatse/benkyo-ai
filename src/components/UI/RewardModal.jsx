@@ -21,7 +21,6 @@ export default function RewardModal({
 
   const amount = Math.max(0, Number(reward?.amount) || 0);
   const rewardLabel = reward?.label ?? (reward?.type === 'coins' ? '金币' : '道具');
-  const amountText = reward?.type === 'coins' ? `+${amount}` : `x${amount}`;
   const isCoins = reward?.type === 'coins';
 
   useEffect(() => {
@@ -214,7 +213,7 @@ export default function RewardModal({
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
-              {amountText}
+              {''}
             </div>
             <div
               style={{

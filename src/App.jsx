@@ -54,8 +54,13 @@ function AppInit() {
       useDailyTaskStore.getState().debugCompleteToast(selector)
     );
 
+    window.benkyoDebugCompleteDailyTask = (selector = 'small') => (
+      useDailyTaskStore.getState().debugResetAndCompleteTask(selector)
+    );
+
     return () => {
       delete window.benkyoDebugDailyTaskToast;
+      delete window.benkyoDebugCompleteDailyTask;
     };
   }, []);
 
