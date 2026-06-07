@@ -6,35 +6,56 @@ function getAndroidBridge() {
   return window.BenkyoAndroid ?? null;
 }
 
-function applyKeepScreenOn() {
-  const shouldKeepAwake = activeTokens.size > 0;
-  const bridge = getAndroidBridge();
-  if (!bridge?.setKeepScreenOn || nativeApplied === shouldKeepAwake) return;
+function callNativeGenerationMethod(bridge, methodName, enabled) {
+  const method = bridge?.[methodName];
+  if (!method) return false;
 
   try {
-    bridge.setKeepScreenOn(shouldKeepAwake);
-    nativeApplied = shouldKeepAwake;
+    method.call(bridge, enabled);
+    return true;
   } catch (error) {
-    console.warn('[KeepScreenAwake] failed to update native screen flag:', error);
+    console.warn(`[KeepScreenAwake] native ${methodName} failed:`, error);
+    return false;
+  }
+}
+
+function applyGenerationNativeState() {
+  const shouldKeepAwake = activeTokens.size > 0;
+  const bridge = getAndroidBridge();
+  if (!bridge || nativeApplied === shouldKeepAwake) return;
+
+  const didApplyKeepScreen = callNativeGenerationMethod(
+    bridge,
+    'setKeepScreenOn',
+    shouldKeepAwake
+  );
+  const didApplyForegroundService = callNativeGenerationMethod(
+    bridge,
+    'setCourseGenerationServiceActive',
+    shouldKeepAwake
+  );
+
+  if (didApplyKeepScreen || didApplyForegroundService) {
+    nativeApplied = shouldKeepAwake;
   }
 }
 
 export function acquireKeepScreenAwake(reason = 'generation') {
   const token = Symbol(reason);
   activeTokens.add(token);
-  applyKeepScreenOn();
+  applyGenerationNativeState();
   return token;
 }
 
 export function releaseKeepScreenAwake(token) {
   if (!token || !activeTokens.delete(token)) return;
-  applyKeepScreenOn();
+  applyGenerationNativeState();
 }
 
 export function releaseAllKeepScreenAwake() {
   if (activeTokens.size === 0) return;
   activeTokens.clear();
-  applyKeepScreenOn();
+  applyGenerationNativeState();
 }
 
 if (typeof window !== 'undefined') {

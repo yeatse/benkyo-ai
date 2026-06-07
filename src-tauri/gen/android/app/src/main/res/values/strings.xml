@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">日学</string>
     <string name="main_activity_title">日学</string>
+    <string name="course_generation_notification_channel">课程生成</string>
+    <string name="course_generation_notification_channel_desc">AI 课程生成期间保持后台任务运行</string>
+    <string name="course_generation_notification_title">BenkyoAI 正在生成课程中…</string>
+    <string name="course_generation_notification_text">完成后通知会自动关闭</string>
 </resources>

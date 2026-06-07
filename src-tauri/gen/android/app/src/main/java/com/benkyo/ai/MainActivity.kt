@@ -1,7 +1,12 @@
 package com.benkyo.ai
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -18,11 +23,17 @@ import androidx.core.view.updatePadding
 
 class MainActivity : TauriActivity() {
   private var launchOverlay: View? = null
+  private var notificationPermissionRequested = false
   private val androidBridge = BenkyoAndroidBridge()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
+  }
+
+  override fun onDestroy() {
+    stopCourseGenerationService()
+    super.onDestroy()
   }
 
   override fun onWebViewCreate(webView: WebView) {
@@ -152,9 +163,61 @@ class MainActivity : TauriActivity() {
         }
       }
     }
+
+    @JavascriptInterface
+    fun setCourseGenerationServiceActive(enabled: Boolean) {
+      runOnUiThread {
+        if (enabled) {
+          requestNotificationPermissionOnce()
+          startCourseGenerationService()
+        } else {
+          stopCourseGenerationService()
+        }
+      }
+    }
+  }
+
+  private fun requestNotificationPermissionOnce() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+    if (notificationPermissionRequested) return
+    if (
+      checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+        PackageManager.PERMISSION_GRANTED
+    ) {
+      return
+    }
+
+    notificationPermissionRequested = true
+    requestPermissions(
+      arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+      REQUEST_POST_NOTIFICATIONS,
+    )
+  }
+
+  private fun startCourseGenerationService() {
+    val intent = Intent(this, CourseGenerationService::class.java)
+    try {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        startForegroundService(intent)
+      } else {
+        startService(intent)
+      }
+    } catch (error: Exception) {
+      Log.w(TAG, "Failed to start course generation foreground service", error)
+    }
+  }
+
+  private fun stopCourseGenerationService() {
+    try {
+      stopService(Intent(this, CourseGenerationService::class.java))
+    } catch (error: Exception) {
+      Log.w(TAG, "Failed to stop course generation foreground service", error)
+    }
   }
 
   companion object {
+    private const val TAG = "BenkyoMainActivity"
+    private const val REQUEST_POST_NOTIFICATIONS = 2102
     private const val SPLASH_CHECK_INTERVAL_MS = 100L
     private const val SPLASH_HIDE_DELAY_MS = 80L
     private const val SPLASH_FADE_MS = 180L
