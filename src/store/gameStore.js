@@ -54,12 +54,53 @@ const removeWrongQuestionFromLesson = (lesson, question) => {
   );
 };
 
+const normalizeSentenceAnswer = (answer) => (
+  Array.isArray(answer) ? answer.join('') : String(answer ?? '')
+);
+
+const getSentenceAnswerCacheKey = (lesson, question) => {
+  if (question?.type !== 'sentence-translate') return null;
+
+  const chapterId = question._sourceChapterId ?? lesson?.chapterId;
+  const levelId = question._sourceLevelId ?? lesson?.levelId;
+  if (!chapterId || !levelId || chapterId === '__practice__') return null;
+
+  const questionId = question._sourceQuestionId ?? question.id;
+  if (questionId === undefined || questionId === null || questionId === '') return null;
+
+  return `${String(chapterId)}::${String(levelId)}::${String(questionId)}`;
+};
+
+const hasAcceptedSentenceAnswer = (acceptedSentenceAnswers, lesson, question, answer) => {
+  const cacheKey = getSentenceAnswerCacheKey(lesson, question);
+  if (!cacheKey) return false;
+  const normalizedAnswer = normalizeSentenceAnswer(answer);
+  return Array.isArray(acceptedSentenceAnswers?.[cacheKey]) && acceptedSentenceAnswers[cacheKey].includes(normalizedAnswer);
+};
+
+const addAcceptedSentenceAnswer = (acceptedSentenceAnswers, lesson, question, answer) => {
+  const cacheKey = getSentenceAnswerCacheKey(lesson, question);
+  if (!cacheKey) return acceptedSentenceAnswers;
+
+  const normalizedAnswer = normalizeSentenceAnswer(answer);
+  if (!normalizedAnswer) return acceptedSentenceAnswers;
+
+  const currentAnswers = Array.isArray(acceptedSentenceAnswers?.[cacheKey]) ? acceptedSentenceAnswers[cacheKey] : [];
+  if (currentAnswers.includes(normalizedAnswer)) return acceptedSentenceAnswers;
+
+  return {
+    ...acceptedSentenceAnswers,
+    [cacheKey]: [...currentAnswers, normalizedAnswer],
+  };
+};
+
 const useGameStore = create(
   persist(
     (set, get) => ({
       // Persisted
       levelProgress: {},
       totalXp: 0,
+      acceptedSentenceAnswers: {},
 
       // Ephemeral: current active lesson state (not persisted)
       lesson: null,
@@ -154,7 +195,7 @@ const useGameStore = create(
       },
 
       submitAnswer(answer) {
-        const { lesson } = get();
+        const { lesson, acceptedSentenceAnswers } = get();
         if (!lesson || lesson.feedbackState !== null) return;
 
         const question = lesson.questions[lesson.currentIndex];
@@ -162,7 +203,9 @@ const useGameStore = create(
         let isCorrect;
         if (question.type === 'sentence-translate') {
           // answer is an array of selected words; compare joined strings
-          isCorrect = Array.isArray(answer) && answer.join('') === question.answers.join('');
+          isCorrect =
+            Array.isArray(answer) && answer.join('') === question.answers.join('') ||
+            hasAcceptedSentenceAnswer(acceptedSentenceAnswers, lesson, question, answer);
         } else if (question.type === 'word-match') {
           // called only after all pairs matched — always correct
           isCorrect = true;
@@ -331,13 +374,19 @@ const useGameStore = create(
       // restores the heart deducted for that wrong answer, and updates
       // the visible feedback state so the lesson UI reacts as correct.
       overturnWrongAnswer() {
-        const { lesson } = get();
+        const { lesson, acceptedSentenceAnswers } = get();
         if (!lesson) return;
         const question = lesson.questions[lesson.currentIndex];
         removeWrongQuestionFromLesson(lesson, question);
         useUserStore.getState().restoreHeart();
         useBadgeStore.getState().recordAppealSuccess(1);
         set({
+          acceptedSentenceAnswers: addAcceptedSentenceAnswer(
+            acceptedSentenceAnswers,
+            lesson,
+            question,
+            lesson.selectedAnswer
+          ),
           lesson: {
             ...lesson,
             correctCount: lesson.correctCount + 1,
@@ -426,6 +475,7 @@ const useGameStore = create(
       partialize: (state) => ({
         levelProgress: state.levelProgress,
         totalXp: state.totalXp,
+        acceptedSentenceAnswers: state.acceptedSentenceAnswers,
       }),
     }
   )
