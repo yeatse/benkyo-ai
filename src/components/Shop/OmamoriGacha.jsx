@@ -16,11 +16,15 @@ import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
 
 gsap.registerPlugin(useGSAP);
 
-const REEL_ITEM_COUNT = 12;
-const REEL_TARGET_INDEX = 9;
+const REEL_ITEM_COUNT = 48;
+const REEL_TARGET_INDEX = 42;
 const COLLECTION_GRID_DELAY_MS = 1500;
-const REEL_READY_DELAY_MS = 1000;
-const REEL_ROLL_DURATION = 5;
+const REEL_ACCEL_DURATION = 1;
+const REEL_CRUISE_DURATION = 2;
+const REEL_DECEL_DURATION = 2;
+const REEL_ACCEL_DISTANCE_WEIGHT = REEL_ACCEL_DURATION / 2;
+const REEL_CRUISE_DISTANCE_WEIGHT = REEL_CRUISE_DURATION;
+const REEL_DECEL_DISTANCE_WEIGHT = REEL_DECEL_DURATION / 4;
 
 function buildResultReel(result) {
   return Array.from({ length: REEL_ITEM_COUNT }, (_, index) => {
@@ -50,7 +54,6 @@ function preloadImage(src) {
 export default function OmamoriGacha() {
   const coins = useUserStore(s => s.coins);
   const spendCoins = useUserStore(s => s.spendCoins);
-  const recordOmamoriDraw = useUserStore(s => s.recordOmamoriDraw);
   const markOmamoriDetailViewed = useUserStore(s => s.markOmamoriDetailViewed);
   const omamoriCollection = useUserStore(s => s.omamoriCollection ?? {});
   const omamoriViewedDetails = useUserStore(s => s.omamoriViewedDetails ?? {});
@@ -61,6 +64,8 @@ export default function OmamoriGacha() {
   const [result, setResult] = useState(null);
   const [notice, setNotice] = useState(null);
   const [selectedOmamori, setSelectedOmamori] = useState(null);
+  const [stageImageReady, setStageImageReady] = useState(false);
+  const [stageEntered, setStageEntered] = useState(false);
   const [showCollectionGrid, setShowCollectionGrid] = useState(false);
 
   const rootRef = useRef(null);
@@ -70,7 +75,7 @@ export default function OmamoriGacha() {
   const hasAnimatedCollectionRef = useRef(false);
 
   const canAfford = coins >= OMAMORI_GACHA_COST;
-  const isDrawing = phase === 'loading' || phase === 'revealed';
+  const isDrawing = phase !== 'idle';
   const [reelItems, setReelItems] = useState([]);
   const [drawKey, setDrawKey] = useState(0);
 
@@ -104,15 +109,31 @@ export default function OmamoriGacha() {
     gsap.set([stageRef.current, lineupRef.current], { opacity: 0, y: 18 });
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    preloadImage(gachaIntroImg).then(() => {
+      if (!cancelled) setStageImageReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [gachaIntroImg]);
+
   useGSAP(() => {
+    if (!stageImageReady) return undefined;
+
     const tl = gsap.timeline();
     tl.to(stageRef.current, { opacity: 1, y: 0, duration: 0.46, ease: 'back.out(1.8)' }, 0.04);
     tl.to(lineupRef.current, { opacity: 1, y: 0, duration: 0.42, ease: 'back.out(1.7)' }, 0.2);
+    tl.call(() => setStageEntered(true));
 
     return () => tl.kill();
-  }, []);
+  }, [stageImageReady]);
 
   useEffect(() => {
+    if (!stageEntered) return undefined;
+
     let idleCancel = null;
     let frameId = null;
     const delayId = window.setTimeout(() => {
@@ -130,7 +151,7 @@ export default function OmamoriGacha() {
       if (frameId !== null) window.cancelAnimationFrame(frameId);
       idleCancel?.();
     };
-  }, []);
+  }, [stageEntered]);
 
   useGSAP(() => {
     if (!showCollectionGrid) return;
@@ -159,9 +180,11 @@ export default function OmamoriGacha() {
   }, [showCollectionGrid]);
 
   useGSAP(() => {
+    if (!stageImageReady) return undefined;
+
     const lanterns = rootRef.current?.querySelectorAll('[data-omamori-lantern]');
 
-    gsap.to(lanterns, {
+    const tween = gsap.to(lanterns, {
       opacity: 0.38,
       scale: 1.12,
       repeat: -1,
@@ -170,7 +193,9 @@ export default function OmamoriGacha() {
       ease: 'sine.inOut',
       stagger: 0.16,
     });
-  }, []);
+
+    return () => tween.kill();
+  }, [stageImageReady]);
 
   const showInsufficientCoins = () => {
     setNotice('金币不足');
@@ -181,32 +206,33 @@ export default function OmamoriGacha() {
     );
   };
 
-  const startDraw = () => {
-    if (!spendCoins(OMAMORI_GACHA_COST)) {
+  const showStageInsufficientCoins = () => {
+    if (phase !== 'idle') return;
+    showInsufficientCoins();
+  };
+
+  const prepareDraw = () => {
+    if (!canAfford) {
       showInsufficientCoins();
       return;
     }
 
     const nextResult = drawOmamori();
-    const nextCount = recordOmamoriDraw(nextResult.id);
-    const resultWithState = { ...nextResult, isNew: nextCount === 1 };
+    const resultWithState = { ...nextResult, isNew: false };
     setNotice(null);
     setResult(resultWithState);
     setReelItems(buildResultReel(resultWithState));
     setDrawKey(key => key + 1);
-    setPhase('loading');
-    window.requestAnimationFrame(() => {
-      setPhase('revealed');
-    });
+    setPhase('ready');
   };
 
   const handleDraw = () => {
     if (isDrawing) return;
-    startDraw();
+    prepareDraw();
   };
 
   const handleDrawAgain = () => {
-    startDraw();
+    prepareDraw();
   };
 
   const closeResult = () => {
@@ -227,6 +253,16 @@ export default function OmamoriGacha() {
 
   return (
     <div ref={rootRef} className="omamori-gacha" data-ui-click-sfx>
+      {!stageImageReady && (
+        <div className="omamori-stage-loading" role="status" aria-live="polite">
+          <span>御守を準備中</span>
+          <span className="omamori-lineup-loading__dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        </div>
+      )}
       <section ref={stageRef} className={`omamori-stage omamori-stage--${phase}`}>
         <div
           className="omamori-stage__aura"
@@ -234,7 +270,7 @@ export default function OmamoriGacha() {
         >
           <div
             className="omamori-stage__intro"
-            style={{ backgroundImage: `url(${gachaIntroImg})` }}
+            style={stageImageReady ? { backgroundImage: `url(${gachaIntroImg})` } : undefined}
           />
           <div className="omamori-stage__glow" />
           <div className="omamori-stage__beams">
@@ -330,7 +366,7 @@ export default function OmamoriGacha() {
         )}
       </section>
 
-      {phase === 'revealed' && result && (
+      {phase !== 'idle' && result && (
         <GachaResultModal
           key={drawKey}
           result={result}
@@ -338,6 +374,8 @@ export default function OmamoriGacha() {
           targetIndex={REEL_TARGET_INDEX}
           coinImg={coinImg}
           canDrawAgain={canAfford}
+          spendCoins={spendCoins}
+          onInsufficientCoins={showStageInsufficientCoins}
           onClose={closeResult}
           onDrawAgain={handleDrawAgain}
         />
@@ -354,9 +392,10 @@ export default function OmamoriGacha() {
   );
 }
 
-function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgain, onClose, onDrawAgain }) {
+function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgain, spendCoins, onInsufficientCoins, onClose, onDrawAgain }) {
   const resultIcon = useIcon(result.iconPath);
   const resolveIcon = useIconResolver();
+  const recordOmamoriDraw = useUserStore(s => s.recordOmamoriDraw);
   const overlayRef = useRef(null);
   const cardRef = useRef(null);
   const reelViewportRef = useRef(null);
@@ -364,113 +403,170 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
   const reelTargetRef = useRef(null);
   const particleRef = useRef(null);
   const btnsRef = useRef(null);
-  const [settled, setSettled] = useState(false);
-  const [reelReady, setReelReady] = useState(false);
+  const rollTimelineRef = useRef(null);
+  const hasRecordedResultRef = useRef(false);
+  const [drawState, setDrawState] = useState('ready');
+  const [isNewResult, setIsNewResult] = useState(false);
+  const [modalNotice, setModalNotice] = useState(null);
+  const [reelImagesReady, setReelImagesReady] = useState(false);
   const rarity = getOmamoriRarity(result.rarity);
+  const neutralRarity = getOmamoriRarity('N');
+  const isRolling = drawState === 'rolling';
+  const settled = drawState === 'settled';
+  const modalRarity = settled ? rarity : neutralRarity;
 
   useEffect(() => {
     const overlay = overlayRef.current;
     const card = cardRef.current;
     const viewport = reelViewportRef.current;
     const track = reelTrackRef.current;
-    const target = reelTargetRef.current;
     const particles = particleRef.current;
     const buttons = btnsRef.current;
-    const imageSrcs = reelItems.map(item => resolveIcon(item.iconPath));
     let cancelled = false;
-    let rollTl = null;
-    let firstFrame = null;
-    let secondFrame = null;
 
     gsap.set(overlay, { opacity: 0 });
     gsap.set(card, { opacity: 0, y: 54, scale: 0.86, rotate: -1 });
     gsap.set(viewport, { opacity: 0, y: 8 });
-    gsap.set(buttons, { opacity: 0, y: 12 });
+    gsap.set(buttons, { opacity: 1, y: 0 });
 
     const startX = viewport ? Math.min(72, viewport.offsetWidth * 0.24) : 48;
-    let endX = 0;
-    if (viewport && target) {
-      const targetCenter = target.offsetLeft + target.offsetWidth / 2;
-      endX = viewport.offsetWidth / 2 - targetCenter;
-    }
     gsap.set(track, { x: startX });
-
-    const burstParticles = () => {
-      const particleCount = result.rarity === 'SSR' ? 30 : result.rarity === 'SR' ? 24 : 18;
-      for (let i = 0; i < particleCount; i += 1) {
-        const el = document.createElement('img');
-        el.src = resultIcon;
-        el.alt = '';
-        el.style.cssText = `
-          position: absolute;
-          left: calc(50% - 10px);
-          top: 224px;
-          width: ${10 + Math.random() * 12}px;
-          height: ${14 + Math.random() * 16}px;
-          object-fit: contain;
-          pointer-events: none;
-          z-index: 1;
-        `;
-        particles.appendChild(el);
-
-        const angle = (i / particleCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.42;
-        const dist = 78 + Math.random() * 90;
-        gsap.fromTo(
-          el,
-          { x: 0, y: 0, scale: 0, opacity: 0.9, rotate: 0 },
-          {
-            x: Math.cos(angle) * dist,
-            y: Math.sin(angle) * dist - 18,
-            scale: 1,
-            rotate: (Math.random() - 0.5) * 260,
-            opacity: 0,
-            duration: 1.12 + Math.random() * 0.48,
-            delay: i * 0.018,
-            ease: 'power2.out',
-            onComplete: () => el.remove(),
-          }
-        );
-      }
-    };
 
     const tl = gsap.timeline();
     tl.to(overlay, { opacity: 1, duration: 0.18 });
-    tl.to(card, { opacity: 1, y: 0, scale: 1, rotate: 0, duration: 0.44, ease: 'back.out(2)' }, '-=0.03');
-
-    Promise.all(imageSrcs.map(preloadImage)).then(() => {
-      if (cancelled) return;
-      firstFrame = window.requestAnimationFrame(() => {
-        secondFrame = window.requestAnimationFrame(() => {
-          if (cancelled) return;
-          setReelReady(true);
-          rollTl = gsap.timeline();
-          rollTl.to(viewport, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' });
-          rollTl.to({}, { duration: REEL_READY_DELAY_MS / 1000 });
-          rollTl.to(track, {
-            x: endX,
-            duration: REEL_ROLL_DURATION,
-            ease: 'power4.out',
-            onComplete: () => {
-              setSettled(true);
-              burstParticles();
-              const isRare = result.rarity === 'SSR' || result.rarity === 'SR';
-              playSoundEffect(isRare ? SOUND_EFFECT_TYPES.LEVEL_COMPLETE : SOUND_EFFECT_TYPES.ANSWER_CORRECT);
-            },
-          });
-          rollTl.to(buttons, { opacity: 1, y: 0, duration: 0.28, ease: 'back.out(1.8)' }, '-=0.02');
-        });
-      });
-    });
+    tl.to(card, {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      rotate: 0,
+      duration: 0.44,
+      ease: 'back.out(2)',
+      onComplete: () => {
+        if (!cancelled) setReelImagesReady(true);
+      },
+    }, '-=0.03');
 
     return () => {
       cancelled = true;
       tl.kill();
-      rollTl?.kill();
-      if (firstFrame !== null) window.cancelAnimationFrame(firstFrame);
-      if (secondFrame !== null) window.cancelAnimationFrame(secondFrame);
+      rollTimelineRef.current?.kill();
       particles.replaceChildren();
     };
-  }, [reelItems, resolveIcon, result.id, result.rarity, resultIcon]);
+  }, [result.id, result.rarity, resultIcon]);
+
+  const reelItemsWithIcons = useMemo(() => {
+    if (!reelImagesReady) return [];
+    return reelItems.map(item => ({ ...item, iconSrc: resolveIcon(item.iconPath) }));
+  }, [reelImagesReady, reelItems, resolveIcon]);
+
+  useEffect(() => {
+    if (!reelImagesReady || !reelItemsWithIcons.length) return undefined;
+
+    const viewport = reelViewportRef.current;
+    let cancelled = false;
+    Promise.all(reelItemsWithIcons.map(item => preloadImage(item.iconSrc))).then(() => {
+      if (cancelled) return;
+      gsap.to(viewport, { opacity: 1, y: 0, duration: 0.24, ease: 'power2.out' });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reelImagesReady, reelItemsWithIcons]);
+
+  const burstParticles = () => {
+    const particles = particleRef.current;
+    if (!particles) return;
+    const particleCount = result.rarity === 'SSR' ? 30 : result.rarity === 'SR' ? 24 : 18;
+    for (let i = 0; i < particleCount; i += 1) {
+      const el = document.createElement('img');
+      el.src = resultIcon;
+      el.alt = '';
+      el.style.cssText = `
+        position: absolute;
+        left: calc(50% - 10px);
+        top: 224px;
+        width: ${10 + Math.random() * 12}px;
+        height: ${14 + Math.random() * 16}px;
+        object-fit: contain;
+        pointer-events: none;
+        z-index: 1;
+      `;
+      particles.appendChild(el);
+
+      const angle = (i / particleCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.42;
+      const dist = 78 + Math.random() * 90;
+      gsap.fromTo(
+        el,
+        { x: 0, y: 0, scale: 0, opacity: 0.9, rotate: 0 },
+        {
+          x: Math.cos(angle) * dist,
+          y: Math.sin(angle) * dist - 18,
+          scale: 1,
+          rotate: (Math.random() - 0.5) * 260,
+          opacity: 0,
+          duration: 1.12 + Math.random() * 0.48,
+          delay: i * 0.018,
+          ease: 'power2.out',
+          onComplete: () => el.remove(),
+        }
+      );
+    }
+  };
+
+  const startRoll = () => {
+    if (drawState !== 'ready') return;
+    if (!reelImagesReady || !reelItemsWithIcons.length) return;
+
+    if (!spendCoins(OMAMORI_GACHA_COST)) {
+      setModalNotice('金币不足');
+      onInsufficientCoins?.();
+      gsap.fromTo(
+        btnsRef.current,
+        { x: -6 },
+        { x: 6, repeat: 5, yoyo: true, duration: 0.055, ease: 'sine.inOut', onComplete: () => gsap.set(btnsRef.current, { x: 0 }) }
+      );
+      return;
+    }
+
+    const viewport = reelViewportRef.current;
+    const track = reelTrackRef.current;
+    const target = reelTargetRef.current;
+    const buttons = btnsRef.current;
+    if (!viewport || !track || !target) return;
+
+    const startX = Math.min(72, viewport.offsetWidth * 0.24);
+    const targetCenter = target.offsetLeft + target.offsetWidth / 2;
+    const endX = viewport.offsetWidth / 2 - targetCenter;
+    const travel = endX - startX;
+    const distanceWeight = REEL_ACCEL_DISTANCE_WEIGHT + REEL_CRUISE_DISTANCE_WEIGHT + REEL_DECEL_DISTANCE_WEIGHT;
+    const accelX = startX + travel * (REEL_ACCEL_DISTANCE_WEIGHT / distanceWeight);
+    const cruiseX = startX + travel * ((REEL_ACCEL_DISTANCE_WEIGHT + REEL_CRUISE_DISTANCE_WEIGHT) / distanceWeight);
+
+    setDrawState('rolling');
+    setModalNotice(null);
+    gsap.set(track, { x: startX });
+    gsap.to(buttons, { opacity: 0, y: 12, duration: 0.18, ease: 'power2.out' });
+
+    rollTimelineRef.current?.kill();
+    rollTimelineRef.current = gsap.timeline({
+      onComplete: () => {
+        if (!hasRecordedResultRef.current) {
+          hasRecordedResultRef.current = true;
+          setIsNewResult(recordOmamoriDraw(result.id) === 1);
+        }
+        setDrawState('settled');
+        burstParticles();
+        const isRare = result.rarity === 'SSR' || result.rarity === 'SR';
+        playSoundEffect(isRare ? SOUND_EFFECT_TYPES.LEVEL_COMPLETE : SOUND_EFFECT_TYPES.ANSWER_CORRECT);
+        gsap.to(buttons, { opacity: 1, y: 0, duration: 0.28, ease: 'back.out(1.8)' });
+      },
+    });
+    rollTimelineRef.current
+      .to(track, { x: accelX, duration: REEL_ACCEL_DURATION, ease: 'power2.in' })
+      .to(track, { x: cruiseX, duration: REEL_CRUISE_DURATION, ease: 'none' })
+      .to(track, { x: endX, duration: REEL_DECEL_DURATION, ease: 'power4.out' });
+  };
 
   const dismiss = (after) => {
     const tl = gsap.timeline({ onComplete: after });
@@ -482,38 +578,39 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
     <div
       ref={overlayRef}
       data-ui-click-sfx
-      className={`omamori-result-overlay omamori-result-overlay--${result.rarity.toLowerCase()}`}
-      style={{ '--rarity-color': rarity.color, '--rarity-bg': rarity.bg, '--rarity-glow': rarity.glow }}
+      className={`omamori-result-overlay omamori-result-overlay--${settled ? result.rarity.toLowerCase() : 'n'}`}
+      style={{ '--rarity-color': modalRarity.color, '--rarity-bg': modalRarity.bg, '--rarity-glow': modalRarity.glow }}
     >
       <div ref={cardRef} className="omamori-result-card">
         <div ref={particleRef} className="omamori-result-particles" />
         <div className="omamori-result-card__shine" />
-        <div className={`omamori-result-loading ${reelReady ? 'omamori-result-loading--done' : ''}`} aria-hidden={reelReady}>
-          <span />
-          <strong>抽選窓を準備中</strong>
-        </div>
-        <div className={`omamori-result-new-slot ${settled && result.isNew ? 'omamori-result-new-slot--show' : ''}`}>
+        <div className={`omamori-result-new-slot ${settled && isNewResult ? 'omamori-result-new-slot--show' : ''}`}>
           <span>New!!</span>
         </div>
-        <div className="omamori-result-label">{settled ? '抽選結果' : reelReady ? '御守抽選中' : '御守準備中'}</div>
+        <div className="omamori-result-label">{settled ? '抽選結果' : isRolling ? '御守抽選中' : '御守抽選'}</div>
 
         <div className="omamori-result-reel">
           <div className="omamori-result-reel__marker" />
+          {!reelImagesReady && (
+            <div className="omamori-result-reel__placeholder" aria-live="polite">
+              御守を並べています
+            </div>
+          )}
           <div ref={reelViewportRef} className="omamori-result-reel__viewport">
             <div ref={reelTrackRef} className="omamori-result-reel__track">
-              {reelItems.map((item, index) => {
+              {reelItemsWithIcons.map((item, index) => {
                 const itemRarity = getOmamoriRarity(item.rarity);
-                const itemIcon = resolveIcon(item.iconPath);
                 const isTarget = index === targetIndex;
+                const displayRarity = isTarget && !settled ? neutralRarity : itemRarity;
                 return (
                   <div
                     key={item.reelKey ?? `${index}-${item.id}`}
                     ref={isTarget ? reelTargetRef : null}
                     className={`omamori-result-reel__item omamori-result-reel__item--${item.rarity.toLowerCase()} ${isTarget ? 'omamori-result-reel__item--target' : ''} ${settled && isTarget ? 'omamori-result-reel__item--settled' : ''}`}
-                    style={{ '--rarity-color': itemRarity.color, '--rarity-bg': itemRarity.bg, '--rarity-glow': itemRarity.glow }}
+                    style={{ '--rarity-color': displayRarity.color, '--rarity-bg': displayRarity.bg, '--rarity-glow': displayRarity.glow }}
                   >
-                    <div className="omamori-result-reel__figure" style={{ '--omamori-mask': `url(${itemIcon})` }}>
-                      <img src={itemIcon} alt={item.name} decoding="async" />
+                    <div className="omamori-result-reel__figure" style={{ '--omamori-mask': `url(${item.iconSrc})` }}>
+                      <img src={item.iconSrc} alt={item.name} decoding="async" />
                     </div>
                     <span className="omamori-result-reel__rarity">{item.rarity}</span>
                   </div>
@@ -523,29 +620,47 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
           </div>
         </div>
 
-        <h2>{settled ? result.name : reelReady ? '運命の御守を選んでいます' : '御守を呼び出しています'}</h2>
-        <p>{settled ? '御守・護身符' : reelReady ? '金色の光が導いています' : '抽選札をそろえています'}</p>
+        <h2>{settled ? result.name : isRolling ? '運命の御守を選んでいます' : '御守を迎えましょう'}</h2>
+        <p>{settled ? '御守・護身符' : isRolling ? '金色の光が導いています' : '心を込めて、抽選札を引きます'}</p>
         <div className="omamori-result-rate">
-          {settled ? `${result.rarity} 排出率 ${rarity.rate}%` : reelReady ? '横スクロール抽選中' : '画像を準備中'}
+          {settled ? `${result.rarity} 排出率 ${rarity.rate}%` : isRolling ? '横スクロール抽選中' : `1回 ${OMAMORI_GACHA_COST}`}
+        </div>
+        <div className={`omamori-result-notice ${modalNotice ? 'omamori-result-notice--show' : ''}`}>
+          {modalNotice ?? ' '}
         </div>
 
-        <div ref={btnsRef} className="omamori-result-actions">
-          <button type="button" onClick={() => dismiss(onClose)} className="btn-press omamori-result-button omamori-result-button--ghost">
-            收下
-          </button>
-          <button
-            type="button"
-            onClick={() => dismiss(onDrawAgain)}
-            disabled={!canDrawAgain}
-            data-sfx={SOUND_EFFECT_TYPES.WORD_SELECTED}
-            className="btn-press omamori-result-button omamori-result-button--draw"
-          >
-            <span>{canDrawAgain ? '再抽一次' : '金币不足'}</span>
-            <span>
-              <img src={coinImg} alt="" width={18} height={18} decoding="async" />
-              {OMAMORI_GACHA_COST}
-            </span>
-          </button>
+        <div ref={btnsRef} className={`omamori-result-actions ${settled ? 'omamori-result-actions--settled' : 'omamori-result-actions--ready'}`}>
+          {!settled && (
+            <button
+              type="button"
+              onClick={startRoll}
+              disabled={isRolling || !reelImagesReady}
+              data-sfx={SOUND_EFFECT_TYPES.WORD_SELECTED}
+              className="btn-press omamori-result-button omamori-result-button--start"
+            >
+              {reelImagesReady ? '开始抽取' : '御守準備中'}
+            </button>
+          )}
+          {settled && (
+            <>
+              <button type="button" onClick={() => dismiss(onClose)} className="btn-press omamori-result-button omamori-result-button--ghost">
+                收下
+              </button>
+              <button
+                type="button"
+                onClick={() => dismiss(onDrawAgain)}
+                disabled={!canDrawAgain}
+                data-sfx={SOUND_EFFECT_TYPES.WORD_SELECTED}
+                className="btn-press omamori-result-button omamori-result-button--draw"
+              >
+                <span>{canDrawAgain ? '再抽一次' : '金币不足'}</span>
+                <span>
+                  <img src={coinImg} alt="" width={18} height={18} decoding="async" />
+                  {OMAMORI_GACHA_COST}
+                </span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>,
