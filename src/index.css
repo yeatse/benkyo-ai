@@ -1,4 +1,3 @@
-@import url('https://tetunori.github.io/fluent-emoji-webfont/dist/FluentEmojiColor.css');
 @import "tailwindcss";
 
 @theme {
@@ -25,8 +24,8 @@
   --color-text: #1E1B4B;
   --color-text-muted: #6B7280;
 
-  --font-sans: 'Inter', 'Noto Sans JP', 'Fluent Emoji Color', system-ui, sans-serif;
-  --font-jp: 'Noto Sans JP', 'Inter', 'Fluent Emoji Color', sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  --font-jp: system-ui, -apple-system, BlinkMacSystemFont, 'Yu Gothic', 'Meiryo', 'Hiragino Sans', 'Microsoft YaHei', sans-serif;
 }
 
 * {
