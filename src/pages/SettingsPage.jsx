@@ -5,7 +5,7 @@ import gsap from 'gsap';
 import { generateText } from 'ai';
 import useAiStore, { PROVIDER_PRESETS } from '../store/aiStore';
 import useTtsStore, { TTS_PROVIDER_PRESETS } from '../store/ttsStore';
-import useAppearanceStore, { DEFAULT_ICON_SKIN, ICON_SKINS, isIconSkin } from '../store/appearanceStore';
+import useAppearanceStore, { DEFAULT_ICON_SKIN, DEFAULT_WORD_CHIP_MOTION, ICON_SKINS, WORD_CHIP_MOTION_OPTIONS, isIconSkin, isWordChipMotion } from '../store/appearanceStore';
 import { getModel } from '../lib/ai-providers';
 import { getAiErrorContent, logAiGeneratedContent } from '../lib/ai-debug';
 import { requestTtsAudioBlob } from '../lib/tts';
@@ -73,8 +73,11 @@ export default function SettingsPage() {
   const setTtsConfigStore = useTtsStore(s => s.setConfig);
   const iconSkin = useAppearanceStore(s => s.iconSkin);
   const setIconSkin = useAppearanceStore(s => s.setIconSkin);
+  const wordChipMotion = useAppearanceStore(s => s.wordChipMotion);
+  const setWordChipMotion = useAppearanceStore(s => s.setWordChipMotion);
   const settingImg = useIcon('ui/setting.png');
   const activeIconSkin = isIconSkin(iconSkin) ? iconSkin : DEFAULT_ICON_SKIN;
+  const activeWordChipMotion = isWordChipMotion(wordChipMotion) ? wordChipMotion : DEFAULT_WORD_CHIP_MOTION;
   const savedTtsProvider = TTS_PROVIDER_PRESETS[savedTtsConfig.provider]
     ? savedTtsConfig.provider
     : 'aliyun-cosyvoice';
@@ -349,37 +352,69 @@ export default function SettingsPage() {
         {/* Appearance Section */}
         <div style={{ marginBottom: 8 }}>
           <h2 style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-            界面皮肤
+            界面设置
           </h2>
         </div>
 
         <div className="bg-white rounded-2xl" style={{ padding: '20px 16px', boxShadow: '0 4px 24px rgba(91,79,233,0.10)', marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 8 }}>
-            图标组
-          </label>
-          <div style={{
-            position: 'relative',
-            background: '#F9FAFB',
-            borderRadius: 12,
-            border: '1.5px solid #E5E7EB',
-          }}>
-            <select
-              value={activeIconSkin}
-              onChange={e => setIconSkin(e.target.value)}
-              style={{
-                width: '100%', padding: '11px 14px',
-                background: 'transparent', border: 'none', outline: 'none',
-                fontSize: 14, fontWeight: 600, color: '#1E1B4B',
-                cursor: 'pointer', appearance: 'none',
-              }}
-            >
-              {ICON_SKINS.map(opt => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.label}{opt.isDefault ? '（默认）' : ''}
-                </option>
-              ))}
-            </select>
-            <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: 12, color: '#9CA3AF' }}>▼</span>
+          <div style={{ marginBottom: 18 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 8 }}>
+              图标组
+            </label>
+            <div style={{
+              position: 'relative',
+              background: '#F9FAFB',
+              borderRadius: 12,
+              border: '1.5px solid #E5E7EB',
+            }}>
+              <select
+                value={activeIconSkin}
+                onChange={e => setIconSkin(e.target.value)}
+                style={{
+                  width: '100%', padding: '11px 14px',
+                  background: 'transparent', border: 'none', outline: 'none',
+                  fontSize: 14, fontWeight: 600, color: '#1E1B4B',
+                  cursor: 'pointer', appearance: 'none',
+                }}
+              >
+                {ICON_SKINS.map(opt => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}{opt.isDefault ? '（默认）' : ''}
+                  </option>
+                ))}
+              </select>
+              <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: 12, color: '#9CA3AF' }}>▼</span>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', display: 'block', marginBottom: 8 }}>
+              选词交互类型
+            </label>
+            <div style={{
+              position: 'relative',
+              background: '#F9FAFB',
+              borderRadius: 12,
+              border: '1.5px solid #E5E7EB',
+            }}>
+              <select
+                value={activeWordChipMotion}
+                onChange={e => setWordChipMotion(e.target.value)}
+                style={{
+                  width: '100%', padding: '11px 14px',
+                  background: 'transparent', border: 'none', outline: 'none',
+                  fontSize: 14, fontWeight: 600, color: '#1E1B4B',
+                  cursor: 'pointer', appearance: 'none',
+                }}
+              >
+                {WORD_CHIP_MOTION_OPTIONS.map(opt => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}{opt.isDefault ? '（默认）' : ''}
+                  </option>
+                ))}
+              </select>
+              <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: 12, color: '#9CA3AF' }}>▼</span>
+            </div>
           </div>
         </div>
 

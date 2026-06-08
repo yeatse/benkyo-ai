@@ -317,7 +317,7 @@ rt {
   box-shadow: 0 2px 0 #A78BFA;
   cursor: pointer;
   user-select: none;
-  transition: transform 80ms ease, box-shadow 80ms ease, opacity 200ms ease;
+  transition: background-color 120ms ease, box-shadow 80ms ease, opacity 200ms ease;
 }
 .bank-chip:hover:not(:disabled) {
   background: #F5F3FF;
@@ -347,7 +347,7 @@ rt {
   box-shadow: 0 2px 0 #7C3AED;
   cursor: pointer;
   user-select: none;
-  transition: transform 80ms ease, box-shadow 80ms ease;
+  transition: background-color 120ms ease, box-shadow 80ms ease, color 120ms ease, border-color 120ms ease;
 }
 .zone-chip:hover:not(:disabled) {
   background: #DDD6FE;
