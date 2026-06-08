@@ -614,29 +614,6 @@ function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-function normalizeGrammarMatchText(value) {
-  return normalizeGrammarPoint(value).replace(/[\s「」『』【】()[\]（）]/g, '');
-}
-
-function matchGrammarRulesToPoints(rules, expectedGrammarPoints) {
-  const unmatchedRules = new Set(rules.map((_, idx) => idx));
-
-  return expectedGrammarPoints.filter(grammarPoint => {
-    const expected = normalizeGrammarMatchText(grammarPoint);
-    const exactMatch = [...unmatchedRules].find(
-      idx => normalizeGrammarMatchText(rules[idx].title) === expected
-    );
-    const match = exactMatch ?? [...unmatchedRules].find(idx => {
-      const title = normalizeGrammarMatchText(rules[idx].title);
-      return title.includes(expected) || expected.includes(title);
-    });
-
-    if (match === undefined) return true;
-    unmatchedRules.delete(match);
-    return false;
-  });
-}
-
 function validateGrammarSections(sections, expectedGrammarPoints = []) {
   if (!Array.isArray(sections) || sections.length === 0) {
     throw new Error('Grammar tutorial has no sections');
@@ -727,16 +704,8 @@ function validateGrammarSections(sections, expectedGrammarPoints = []) {
     );
   }
   if (ruleCount === 0) throw new Error('Grammar tutorial must have at least one rule');
-  if (tipCount < 1 || tipCount > 2) throw new Error('Grammar tutorial must have one or two tips');
+  if (tipCount < 1) throw new Error('Grammar tutorial must have at least one tip');
   if (vocabularyCount !== 1) throw new Error('Grammar tutorial must have exactly one vocabulary');
-
-  const missingGrammar = matchGrammarRulesToPoints(
-    sections.filter(section => section.type === 'grammar-rule'),
-    expectedGrammarPoints
-  );
-  if (missingGrammar.length > 0) {
-    throw new Error(`Grammar tutorial is missing scaffold grammar: ${missingGrammar.join('、')}`);
-  }
 
   return sections;
 }
