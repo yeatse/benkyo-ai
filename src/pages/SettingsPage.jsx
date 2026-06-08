@@ -315,7 +315,7 @@ export default function SettingsPage() {
   const showRequiredHint = provider === 'openai-compatible';
 
   return (
-    <div style={{ height: '100vh', overflowY: 'auto', background: '#F5F3FF' }}>
+    <div className="scroll-y" style={{ height: '100vh', overflowY: 'auto', background: '#F5F3FF' }}>
       {/* Header */}
       <div style={{
         background: 'linear-gradient(155deg, var(--tp) 0%, var(--tp-from) 100%)',

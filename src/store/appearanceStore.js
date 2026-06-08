@@ -6,7 +6,7 @@ export const DEFAULT_WORD_CHIP_MOTION = 'animated';
 
 export const ICON_SKINS = [
   { id: 'benkyochan', label: 'benkyochan', isDefault: true },
-  { id: 'hiyohiyo', label: 'hiyohiyo' },
+  /* { id: 'hiyohiyo', label: 'hiyohiyo' }, */
 ];
 
 export const WORD_CHIP_MOTION_OPTIONS = [

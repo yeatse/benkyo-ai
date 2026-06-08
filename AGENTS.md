@@ -327,7 +327,7 @@ TTS 缓存：
 ## 图标与资源
 
 - 图标统一通过 `useIcon()` / `useIconResolver()` 读取，路径写相对皮肤根目录，如 `ui/bag.png`、`sd/sd_badge_course.png`。
-- 当前支持 `benkyochan` 和 `hiyohiyo` 两套皮肤，默认 `benkyochan`；缺失资源会回退默认皮肤。
+- 当前支持 `benkyochan` 默认皮肤，缺失资源会回退默认皮肤，未来会增加新皮肤。
 - 徽章图为圆形成品图，不要额外绘制边框；未解锁灰度，已解锁和解锁弹窗使用扫光效果。
 - 御守图标位于当前皮肤 `sd/` 目录，文件名含日文/中文字符；通过 `useIconResolver()` 解析，不要手写 public URL。
 - 品牌 Logo 使用当前皮肤下的 `logo_32.png` 或 `logo.png`。
