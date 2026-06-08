@@ -34,9 +34,12 @@ function applyThinkingOpts(aiConfig, callOptions) {
 
 // ─── Streamed JSON generation with estimated progress ─────────────────────────
 
-const STREAM_PROGRESS_CAP = 0.92;
-const VALIDATING_PROGRESS = 0.96;
-const STREAM_PROGRESS_MULTIPLIER = 2;
+const CHAPTER_PHASE_PROGRESS_POINTS = 33;
+const STREAM_AUTO_PROGRESS_CAP = 16 / CHAPTER_PHASE_PROGRESS_POINTS;
+const STREAM_RECEIVE_PROGRESS = 17 / CHAPTER_PHASE_PROGRESS_POINTS;
+const OBJECT_PROGRESS_CAP = 32 / CHAPTER_PHASE_PROGRESS_POINTS;
+const PROGRESS_TICK_MS = 1000;
+const DEFAULT_PHASE_PROGRESS_POINTS = 100;
 const EXPECTED_JSON_CHARS = {
   scaffold:        900,
   grammar:         4000,
@@ -45,9 +48,9 @@ const EXPECTED_JSON_CHARS = {
 };
 const RECOMMENDATION_DESCRIPTION_MAX_CHARS = 50;
 const CHAPTER_PHASES = [
-  { id: 'scaffold',  weight: 0.15 },
-  { id: 'grammar',   weight: 0.35 },
-  { id: 'questions', weight: 0.50 },
+  { id: 'scaffold',  weight: 1 / 3 },
+  { id: 'grammar',   weight: 1 / 3 },
+  { id: 'questions', weight: 1 / 3 },
 ];
 
 function shouldUseStreamRequest(aiConfig) {
@@ -55,7 +58,7 @@ function shouldUseStreamRequest(aiConfig) {
 }
 
 function buildProgressMessage(baseMessage, status, progress) {
-  if (status === 'thinking') return `${baseMessage} · 模型正在思考…`;
+  if (status === 'thinking') return `${baseMessage} · 模型正在深度思考…`;
   if (status === 'generating') return `${baseMessage} · 正在生成完整内容，约 ${Math.round(progress * 100)}%`;
   if (status === 'streaming') return `${baseMessage} · 正在接收内容，约 ${Math.round(progress * 100)}%`;
   if (status === 'validating') return `${baseMessage} · 正在校验并整理…`;
@@ -63,11 +66,13 @@ function buildProgressMessage(baseMessage, status, progress) {
   return `${baseMessage} · 已完成`;
 }
 
-function createProgressReporter({ phase, baseMessage, expectedChars, onProgress }) {
+function createProgressReporter({ phase, baseMessage, expectedChars, onProgress, progressPoints = DEFAULT_PHASE_PROGRESS_POINTS }) {
   let timer = null;
   let status = 'thinking';
   let stepProgress = 0;
   let receivedChars = 0;
+  let mode = 'stream';
+  const tickAmount = 1 / progressPoints;
 
   const emit = (nextStatus = status, nextProgress = stepProgress) => {
     status = nextStatus;
@@ -84,38 +89,31 @@ function createProgressReporter({ phase, baseMessage, expectedChars, onProgress 
   const start = () => {
     emit('thinking', 0);
     timer = setInterval(() => {
-      const cap = status === 'thinking'
-        ? 0.12
-        : status === 'generating'
-        ? 0.88
-        : status === 'fallback'
-        ? 0.88
-        : status === 'streaming'
-        ? 0.90
-        : stepProgress;
-      const increment = status === 'thinking' ? 0.008 : 0.004;
-      if (stepProgress < cap) emit(status, Math.min(cap, stepProgress + increment));
-    }, 800);
+      const cap = mode === 'object' ? OBJECT_PROGRESS_CAP : STREAM_AUTO_PROGRESS_CAP;
+      if (stepProgress < cap) {
+        emit(status, Math.min(cap, stepProgress + tickAmount));
+      }
+    }, PROGRESS_TICK_MS);
   };
 
   return {
     start,
     receive(delta) {
       receivedChars += delta.length;
-      const estimated = Math.min(
-        STREAM_PROGRESS_CAP,
-        (0.08 + (receivedChars / expectedChars) * 0.84) * STREAM_PROGRESS_MULTIPLIER
-      );
+      const receivedRatio = Math.min(1, receivedChars / expectedChars);
+      const estimated = STREAM_AUTO_PROGRESS_CAP + receivedRatio * STREAM_RECEIVE_PROGRESS;
       emit('streaming', estimated);
     },
     generating() {
+      mode = 'object';
       emit('generating', stepProgress);
     },
     fallback() {
+      mode = 'object';
       emit('fallback', stepProgress);
     },
     validating() {
-      emit('validating', VALIDATING_PROGRESS);
+      emit('validating', stepProgress);
     },
     done() {
       emit('done', 1);
@@ -162,7 +160,13 @@ async function generateJsonWithProgress(aiConfig, callOptions, {
   expectedChars,
   onProgress,
 }) {
-  const reporter = createProgressReporter({ phase, baseMessage, expectedChars, onProgress });
+  const reporter = createProgressReporter({
+    phase,
+    baseMessage,
+    expectedChars,
+    onProgress,
+    progressPoints: onProgress?.progressPoints,
+  });
   reporter.start();
 
   try {
@@ -246,7 +250,13 @@ async function generateJsonObjectWithProgress(aiConfig, callOptions, {
     });
   }
 
-  const reporter = createProgressReporter({ phase, baseMessage, expectedChars, onProgress });
+  const reporter = createProgressReporter({
+    phase,
+    baseMessage,
+    expectedChars,
+    onProgress,
+    progressPoints: onProgress?.progressPoints,
+  });
   reporter.start();
   reporter.generating();
 
@@ -272,12 +282,14 @@ function createChapterProgressHandler(onProgress, stepIndex) {
     .reduce((sum, phase) => sum + phase.weight, 0);
   const { weight } = CHAPTER_PHASES[stepIndex];
 
-  return event => onProgress?.({
+  const handler = event => onProgress?.({
     ...event,
     stepIndex,
     stepTotal: CHAPTER_PHASES.length,
     overallProgress: completedWeight + event.stepProgress * weight,
   });
+  handler.progressPoints = CHAPTER_PHASE_PROGRESS_POINTS;
+  return handler;
 }
 
 // ─── Human-readable label maps ─────────────────────────────────────────────────

@@ -171,7 +171,6 @@ function WordsSection({ words }) {
           </div>
         ) : words.map((word, index) => {
           const kana = toKanaReading(word.jp, word.ruby);
-          const sameAsKana = kana === word.jp;
           return (
             <div key={`${word.jp}-${word.cn}-${index}`} style={{
               background: '#FAFAFA',
