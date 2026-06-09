@@ -27,7 +27,7 @@ const useUserStore = create(
       coinBoost: null, // { multiplier: 2|3, expiresAt: timestamp } | null
 
       // ── Inventory (backpack) ─────────────────────────
-      inventory: { xp2x_15: 0, xp3x_15: 0, coin2x_15: 0, coin3x_15: 0, cake: 0 },
+      inventory: { xp2x_15: 0, xp3x_15: 0, coin2x_15: 0, coin3x_15: 0, giftbox1: 0, giftbox2: 0, giftbox3: 0, cake: 0 },
 
       // ── Omamori collection ───────────────────────────
       omamoriCollection: {},
