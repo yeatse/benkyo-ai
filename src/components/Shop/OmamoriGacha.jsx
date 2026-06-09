@@ -13,6 +13,8 @@ import {
 } from '../../data/omamoriGacha';
 import { useIcon, useIconResolver } from '../../lib/icons';
 import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
+import { createGachaGiftboxReward } from '../../lib/giftbox-rewards';
+import RewardModal from '../UI/RewardModal';
 
 gsap.registerPlugin(useGSAP);
 
@@ -396,6 +398,7 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
   const resultIcon = useIcon(result.iconPath);
   const resolveIcon = useIconResolver();
   const recordOmamoriDraw = useUserStore(s => s.recordOmamoriDraw);
+  const grantReward = useUserStore(s => s.grantReward);
   const overlayRef = useRef(null);
   const cardRef = useRef(null);
   const reelViewportRef = useRef(null);
@@ -407,6 +410,7 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
   const hasRecordedResultRef = useRef(false);
   const [drawState, setDrawState] = useState('ready');
   const [isNewResult, setIsNewResult] = useState(false);
+  const [giftboxReward, setGiftboxReward] = useState(null);
   const [modalNotice, setModalNotice] = useState(null);
   const [reelImagesReady, setReelImagesReady] = useState(false);
   const rarity = getOmamoriRarity(result.rarity);
@@ -558,6 +562,11 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
         setDrawState('settled');
         burstParticles();
         const isRare = result.rarity === 'SSR' || result.rarity === 'SR';
+        if (isRare) {
+          const reward = createGachaGiftboxReward();
+          grantReward(reward);
+          setGiftboxReward(reward);
+        }
         playSoundEffect(isRare ? SOUND_EFFECT_TYPES.LEVEL_COMPLETE : SOUND_EFFECT_TYPES.ANSWER_CORRECT);
         gsap.to(buttons, { opacity: 1, y: 0, duration: 0.28, ease: 'back.out(1.8)' });
       },
@@ -663,6 +672,16 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
           )}
         </div>
       </div>
+      {giftboxReward && (
+        <RewardModal
+          reward={giftboxReward}
+          title="获得礼物！"
+          subtitle="奖励已放入背包"
+          sourceLabel="惊喜奖励"
+          zIndex={190}
+          onDismiss={() => setGiftboxReward(null)}
+        />
+      )}
     </div>,
     document.body
   );

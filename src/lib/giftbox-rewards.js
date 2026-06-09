@@ -59,3 +59,7 @@ export function drawWordReviewGiftboxReward() {
     { itemId: null, chance: 0.7 },
   ]);
 }
+
+export function createGachaGiftboxReward() {
+  return createItemReward('giftbox3');
+}

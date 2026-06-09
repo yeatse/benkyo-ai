@@ -9,6 +9,7 @@ export default function RewardModal({
   title = '获得奖励！',
   subtitle = '奖励已放入背包',
   sourceLabel = '奖励',
+  zIndex = 140,
   onDismiss,
 }) {
   const rewardIcon = useIcon(reward?.iconPath);
@@ -112,7 +113,7 @@ export default function RewardModal({
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 140,
+        zIndex,
         background: 'rgba(17, 24, 39, 0.58)',
         backdropFilter: 'blur(7px)',
         display: 'flex',
