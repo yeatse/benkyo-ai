@@ -7,6 +7,7 @@ const toDateStr = (d = new Date()) => d.toISOString().slice(0, 10);
 
 export const MAX_HEARTS   = 3;
 export const REGEN_MS     = 5 * 60 * 1000; // 5 minutes per heart
+const COFFEE_EXTENSION_MS = 10 * 60 * 1000;
 
 const useUserStore = create(
   persist(
@@ -27,7 +28,8 @@ const useUserStore = create(
       coinBoost: null, // { multiplier: 2|3, expiresAt: timestamp } | null
 
       // ── Inventory (backpack) ─────────────────────────
-      inventory: { xp2x_15: 0, xp3x_15: 0, coin2x_15: 0, coin3x_15: 0, giftbox1: 0, giftbox2: 0, giftbox3: 0, cake: 0 },
+      inventory: { xp2x_15: 0, xp3x_15: 0, coin2x_15: 0, coin3x_15: 0, giftbox1: 0, giftbox2: 0, giftbox3: 0, coffee: 0, sweets_set: 0, cake: 0 },
+      lastCoffeeUsedDate: null,
 
       // ── Omamori collection ───────────────────────────
       omamoriCollection: {},
@@ -276,6 +278,49 @@ const useUserStore = create(
         return true;
       },
 
+      useCoffee() {
+        get().syncXpBoost();
+        const today = toDateStr();
+        const { inventory, xpBoost, coinBoost, lastCoffeeUsedDate } = get();
+        if (lastCoffeeUsedDate === today) return false;
+        const coffeeCount = inventory?.coffee ?? 0;
+        if (coffeeCount <= 0) return false;
+
+        const now = Date.now();
+        if (xpBoost && now < xpBoost.expiresAt) {
+          set({
+            xpBoost: { ...xpBoost, expiresAt: xpBoost.expiresAt + COFFEE_EXTENSION_MS },
+            inventory: { ...inventory, coffee: coffeeCount - 1 },
+            lastCoffeeUsedDate: today,
+          });
+          return true;
+        }
+
+        if (coinBoost && now < coinBoost.expiresAt) {
+          set({
+            coinBoost: { ...coinBoost, expiresAt: coinBoost.expiresAt + COFFEE_EXTENSION_MS },
+            inventory: { ...inventory, coffee: coffeeCount - 1 },
+            lastCoffeeUsedDate: today,
+          });
+          return true;
+        }
+
+        return false;
+      },
+
+      useSweetsSet() {
+        const { hearts, inventory } = get();
+        if (hearts >= MAX_HEARTS) return false;
+        const sweetsCount = inventory?.sweets_set ?? 0;
+        if (sweetsCount <= 0) return false;
+        set({
+          hearts: 5,
+          inventory: { ...inventory, sweets_set: sweetsCount - 1 },
+          nextHeartAt: null,
+        });
+        return true;
+      },
+
       // Restore one heart (used when AI overturns a wrong answer)
       restoreHeart() {
         const { hearts, nextHeartAt } = get();
@@ -312,6 +357,7 @@ const useUserStore = create(
         omamoriViewedDetails: s.omamoriViewedDetails,
         xpBoost: s.xpBoost,
         coinBoost: s.coinBoost,
+        lastCoffeeUsedDate: s.lastCoffeeUsedDate,
         lastCheckIn: s.lastCheckIn,
         learningProfile: s.learningProfile,
       }),

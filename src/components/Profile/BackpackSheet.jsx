@@ -14,8 +14,11 @@ export default function BackpackSheet({ onClose, onBadgeProgressChange }) {
   const xpBoost     = useUserStore(s => s.xpBoost);
   const coinBoost   = useUserStore(s => s.coinBoost);
   const consumeCake    = useUserStore(s => s.useCake);
+  const consumeCoffee  = useUserStore(s => s.useCoffee);
+  const consumeSweetsSet = useUserStore(s => s.useSweetsSet);
   const activateXpCard = useUserStore(s => s.useXpCard);
   const activateCoinCard = useUserStore(s => s.useCoinCard);
+  const lastCoffeeUsedDate = useUserStore(s => s.lastCoffeeUsedDate);
   const bagImg = useIcon('ui/bag.png');
   const resolveIcon = useIconResolver();
 
@@ -28,11 +31,17 @@ export default function BackpackSheet({ onClose, onBadgeProgressChange }) {
     setTimeout(() => setFlash(f => ({ ...f, [id]: null })), 1300);
   };
 
+  const today = new Date().toISOString().slice(0, 10);
+  const hasActiveBoost = Boolean(xpBoost || coinBoost);
+  const coffeeUsedToday = lastCoffeeUsedDate === today;
+
   // Is the 使用 button disabled for this item?
   const isDisabled = (item) => {
     const count = inventory?.[item.id] ?? 0;
     if (count === 0) return true;
     if (item.usable === false) return true;
+    if (item.id === 'coffee' && (!hasActiveBoost || coffeeUsedToday)) return true;
+    if (item.id === 'sweets_set' && hearts >= MAX_HEARTS) return true;
     if (item.id === 'cake' && hearts >= MAX_HEARTS) return true;
     if (item.multiplier && (xpBoost !== null || coinBoost !== null)) return true; // boost already active
     return false;
@@ -45,6 +54,12 @@ export default function BackpackSheet({ onClose, onBadgeProgressChange }) {
     if (f === 'used') return { label: '✓ 已使用', bg: '#22C55E', color: 'white', shadow: 'none', cursor: 'default' };
     if (count === 0) return { label: '使用', bg: '#F3F4F6', color: '#D1D5DB', shadow: 'none', cursor: 'not-allowed' };
     if (item.usable === false) return { label: '收纳中', bg: '#F3F4F6', color: '#9CA3AF', shadow: 'none', cursor: 'default' };
+    if (item.id === 'coffee' && coffeeUsedToday)
+      return { label: '今日已用', bg: '#E0F2FE', color: '#0369A1', shadow: 'none', cursor: 'not-allowed' };
+    if (item.id === 'coffee' && !hasActiveBoost)
+      return { label: '需有加成', bg: '#F3F4F6', color: '#9CA3AF', shadow: 'none', cursor: 'not-allowed' };
+    if (item.id === 'sweets_set' && hearts >= MAX_HEARTS)
+      return { label: '已满血', bg: '#FEF9C3', color: '#CA8A04', shadow: 'none', cursor: 'not-allowed' };
     if (item.id === 'cake' && hearts >= MAX_HEARTS)
       return { label: '已满血', bg: '#FEF9C3', color: '#CA8A04', shadow: 'none', cursor: 'not-allowed' };
     if (item.multiplier && (xpBoost !== null || coinBoost !== null))
@@ -72,6 +87,14 @@ export default function BackpackSheet({ onClose, onBadgeProgressChange }) {
       const ok = consumeCake();
       triggerFlash(item.id, ok ? 'used' : 'full');
       if (ok) onBadgeProgressChange?.();
+    }
+    if (item.id === 'coffee') {
+      const ok = consumeCoffee();
+      triggerFlash(item.id, ok ? 'used' : 'full');
+    }
+    if (item.id === 'sweets_set') {
+      const ok = consumeSweetsSet();
+      triggerFlash(item.id, ok ? 'used' : 'full');
     }
   };
 
@@ -219,10 +242,19 @@ export default function BackpackSheet({ onClose, onBadgeProgressChange }) {
                     )}
                   </div>
                   <p style={{ fontSize: 12, color: '#9CA3AF', lineHeight: 1.3 }}>{item.desc}</p>
-                  {/* Hint when cake is full-heart-locked */}
-                  {item.id === 'cake' && count > 0 && hearts >= MAX_HEARTS && (
+                  {(item.id === 'cake' || item.id === 'sweets_set') && count > 0 && hearts >= MAX_HEARTS && (
                     <p style={{ fontSize: 11, color: '#CA8A04', fontWeight: 600, marginTop: 3 }}>
                       ♥ 心心已满，不需要使用
+                    </p>
+                  )}
+                  {item.id === 'coffee' && count > 0 && coffeeUsedToday && (
+                    <p style={{ fontSize: 11, color: '#0369A1', fontWeight: 600, marginTop: 3 }}>
+                      今日已使用，明天再来一罐
+                    </p>
+                  )}
+                  {item.id === 'coffee' && count > 0 && !coffeeUsedToday && !hasActiveBoost && (
+                    <p style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, marginTop: 3 }}>
+                      需要先开启经验或金币加成
                     </p>
                   )}
                 </div>

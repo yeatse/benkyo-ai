@@ -111,6 +111,30 @@ export const ITEM_DEFINITIONS = [
     badgeBg: 'linear-gradient(135deg, #FBCFE8, #F9A8D4)',
     price: 80,
   },
+  {
+    id: 'coffee',
+    name: '罐装咖啡',
+    subtitle: '每日 1 次',
+    desc: '延长当前加成效果 10 分钟',
+    icon: '☕',
+    iconPath: 'item/coffee.png',
+    iconBg: '#E0F2FE',
+    color: '#0369A1',
+    badgeBg: 'linear-gradient(135deg, #BAE6FD, #38BDF8)',
+    price: 100,
+  },
+  {
+    id: 'sweets_set',
+    name: '日式点心套装',
+    subtitle: '',
+    desc: '直接恢复到 5 颗心',
+    icon: '🍡',
+    iconPath: 'item/sweets_set.png',
+    iconBg: '#FEF3C7',
+    color: '#D97706',
+    badgeBg: 'linear-gradient(135deg, #FDE68A, #FBBF24)',
+    price: 80,
+  },
 ];
 
 export const SHOP_ITEMS = ITEM_DEFINITIONS.filter(item => item.purchasable !== false);

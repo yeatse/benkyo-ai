@@ -100,13 +100,13 @@ export default function XpBoostWidget() {
   const activeBoost = xpBoost ? { ...xpBoost, boostType: 'xp' } : coinBoost ? { ...coinBoost, boostType: 'coin' } : null;
   if (!activeBoost) return null;
 
-  const remaining  = Math.max(0, Math.min(BOOST_DURATION_MS, activeBoost.expiresAt - now));
+  const remaining  = Math.max(0, activeBoost.expiresAt - now);
   const min        = Math.floor(remaining / 60000);
   const sec        = Math.floor((remaining % 60000) / 1000);
   const countdown  = `${min}:${sec.toString().padStart(2, '0')}`;
   const isDouble   = activeBoost.multiplier === 2;
   const isCoinBoost = activeBoost.boostType === 'coin';
-  const pct        = remaining / BOOST_DURATION_MS; // progress fraction 0→1
+  const pct        = Math.min(1, remaining / BOOST_DURATION_MS); // progress fraction 0→1
   const iconSrc = isCoinBoost
     ? (isDouble ? coin2Img : coin3Img)
     : (isDouble ? exp2Img : exp3Img);
