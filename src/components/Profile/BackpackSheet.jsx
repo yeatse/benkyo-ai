@@ -32,6 +32,7 @@ export default function BackpackSheet({ onClose, onBadgeProgressChange }) {
   const isDisabled = (item) => {
     const count = inventory?.[item.id] ?? 0;
     if (count === 0) return true;
+    if (item.usable === false) return true;
     if (item.id === 'cake' && hearts >= MAX_HEARTS) return true;
     if (item.multiplier && (xpBoost !== null || coinBoost !== null)) return true; // boost already active
     return false;
@@ -43,6 +44,7 @@ export default function BackpackSheet({ onClose, onBadgeProgressChange }) {
     const f = flash[item.id];
     if (f === 'used') return { label: '✓ 已使用', bg: '#22C55E', color: 'white', shadow: 'none', cursor: 'default' };
     if (count === 0) return { label: '使用', bg: '#F3F4F6', color: '#D1D5DB', shadow: 'none', cursor: 'not-allowed' };
+    if (item.usable === false) return { label: '收纳中', bg: '#F3F4F6', color: '#9CA3AF', shadow: 'none', cursor: 'default' };
     if (item.id === 'cake' && hearts >= MAX_HEARTS)
       return { label: '已满血', bg: '#FEF9C3', color: '#CA8A04', shadow: 'none', cursor: 'not-allowed' };
     if (item.multiplier && (xpBoost !== null || coinBoost !== null))

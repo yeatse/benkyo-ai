@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useGameStore from '../../store/gameStore';
+import useUserStore from '../../store/userStore';
 import useWordReviewPracticeStore from '../../store/wordReviewPracticeStore';
 import LevelUpModal from '../Lesson/LevelUpModal';
+import RewardModal from '../UI/RewardModal';
 import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
 import { useIcon } from '../../lib/icons';
+import { drawWordReviewGiftboxReward } from '../../lib/giftbox-rewards';
 
 gsap.registerPlugin(useGSAP);
 
@@ -15,6 +18,7 @@ export default function WordReviewPracticeComplete() {
   const practice = useWordReviewPracticeStore(s => s.practice);
   const exit = useWordReviewPracticeStore(s => s.exit);
   const totalXp = useGameStore(s => s.totalXp);
+  const grantReward = useUserStore(s => s.grantReward);
   const lvUpImg = useIcon('ui/level_up.png');
   const coinImg = useIcon('item/coin.png');
   const heartImg = useIcon('ui/heart.png');
@@ -22,8 +26,10 @@ export default function WordReviewPracticeComplete() {
   const collectStarImg = useIcon('ui/collect_star.png');
 
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [giftboxReward, setGiftboxReward] = useState(null);
   const [displayCoins, setDisplayCoins] = useState(0);
   const coinsProxy = useRef({ value: 0 });
+  const giftboxHandledRef = useRef(false);
   const titleRef = useRef(null);
   const starsRef = useRef([]);
   const xpRef = useRef(null);
@@ -88,9 +94,23 @@ export default function WordReviewPracticeComplete() {
     return () => clearTimeout(timer);
   }, [leveledUp]);
 
-  const handleContinue = () => {
+  const finishNavigation = () => {
     exit();
     navigate('/vocab');
+  };
+
+  const handleContinue = () => {
+    if (!giftboxHandledRef.current) {
+      giftboxHandledRef.current = true;
+      const reward = drawWordReviewGiftboxReward();
+      if (reward) {
+        grantReward(reward);
+        setGiftboxReward(reward);
+        return;
+      }
+    }
+
+    finishNavigation();
   };
 
   return (
@@ -197,6 +217,18 @@ export default function WordReviewPracticeComplete() {
           newLevel={newLevel}
           totalXp={totalXp}
           onContinue={handleContinue}
+        />
+      )}
+      {giftboxReward && (
+        <RewardModal
+          reward={giftboxReward}
+          title="获得礼物！"
+          subtitle="奖励已放入背包"
+          sourceLabel="惊喜奖励"
+          onDismiss={() => {
+            setGiftboxReward(null);
+            finishNavigation();
+          }}
         />
       )}
     </div>

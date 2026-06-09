@@ -3,21 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import useGameStore from '../../store/gameStore';
+import useUserStore from '../../store/userStore';
 import LevelUpModal from './LevelUpModal';
+import RewardModal from '../UI/RewardModal';
 import { playSoundEffect, SOUND_EFFECT_TYPES } from '../../lib/sound-effects';
 import { useIcon } from '../../lib/icons';
+import { drawLessonGiftboxReward } from '../../lib/giftbox-rewards';
 
 export default function LessonComplete() {
   const navigate = useNavigate();
   const { lesson, exitLesson, totalXp } = useGameStore();
+  const grantReward = useUserStore(s => s.grantReward);
   const heartImg = useIcon('ui/heart.png');
   const lvUpImg = useIcon('ui/level_up.png');
   const coinImg = useIcon('item/coin.png');
   const sdCompleteImg = useIcon('sd/sd_complete.png');
   const collectStarImg = useIcon('ui/collect_star.png');
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [giftboxReward, setGiftboxReward] = useState(null);
   const [displayCoins, setDisplayCoins] = useState(0);
   const coinsProxy = useRef({ value: 0 });
+  const giftboxHandledRef = useRef(false);
 
   const containerRef = useRef(null);
   const star1Ref = useRef(null);
@@ -115,9 +121,23 @@ export default function LessonComplete() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleContinue = () => {
+  const finishNavigation = () => {
     exitLesson();
     navigate(lesson?.returnPath ?? '/');
+  };
+
+  const handleContinue = () => {
+    if (!giftboxHandledRef.current) {
+      giftboxHandledRef.current = true;
+      const reward = drawLessonGiftboxReward(finalStars);
+      if (reward) {
+        grantReward(reward);
+        setGiftboxReward(reward);
+        return;
+      }
+    }
+
+    finishNavigation();
   };
 
   const getMessage = () => {
@@ -256,6 +276,18 @@ export default function LessonComplete() {
           newLevel={newLevel}
           totalXp={totalXp}
           onContinue={handleContinue}
+        />
+      )}
+      {giftboxReward && (
+        <RewardModal
+          reward={giftboxReward}
+          title="获得礼物！"
+          subtitle="奖励已放入背包"
+          sourceLabel="惊喜奖励"
+          onDismiss={() => {
+            setGiftboxReward(null);
+            finishNavigation();
+          }}
         />
       )}
     </div>
