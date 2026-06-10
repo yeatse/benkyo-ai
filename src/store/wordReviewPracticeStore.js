@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import useGameStore from './gameStore';
 import useUserStore from './userStore';
 import useDailyTaskStore, { DAILY_TASK_EVENTS } from './dailyTaskStore';
-import { applyEmaStarFloor, getPerfectClearBonusCoins } from '../lib/equipment-effects';
+import { applyEmaStarFloor, getPerfectClearBonusCoins, getXpStars } from '../lib/equipment-effects';
 
 const COINS_PER_QUESTION = 2;
 const XP_PER_STAR = 10;
@@ -109,7 +109,8 @@ const useWordReviewPracticeStore = create((set, get) => ({
       const rawStars = wrongCount === 0 ? 3 : wrongCount === 1 ? 2 : 1;
       const equippedItems = useUserStore.getState().equippedItems;
       const stars = applyEmaStarFloor(rawStars, equippedItems);
-      const xp = stars * XP_PER_STAR;
+      const xpStars = getXpStars(stars, equippedItems);
+      const xp = xpStars * XP_PER_STAR;
       const levelResult = useGameStore.getState().awardPracticeXp(xp);
       const bonusCoins = getPerfectClearBonusCoins(stars, equippedItems);
       if (bonusCoins > 0) useUserStore.getState().addCoins(bonusCoins);

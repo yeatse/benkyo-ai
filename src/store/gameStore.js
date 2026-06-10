@@ -6,7 +6,7 @@ import useVocabStore from './vocabStore';
 import useWrongQuestionStore, { getWrongQuestionId } from './wrongQuestionStore';
 import useDailyTaskStore, { DAILY_TASK_EVENTS } from './dailyTaskStore';
 import useBadgeStore from './badgeStore';
-import { applyEmaStarFloor, canUseSakuraPetalShield, canUseUmbrellaShield, getPerfectClearBonusCoins } from '../lib/equipment-effects';
+import { applyEmaStarFloor, canUseSakuraPetalShield, canUseUmbrellaShield, getPerfectClearBonusCoins, getXpStars } from '../lib/equipment-effects';
 
 export const XP_PER_LEVEL = 400;
 export const BASE_XP = 60;
@@ -314,7 +314,8 @@ const useGameStore = create(
 
           // Apply active XP boost (card must still be valid at settlement time)
           const boostMult = getActiveXpMultiplier();
-          const xp = Math.round(BASE_XP * stars * boostMult);
+          const xpStars = getXpStars(stars, equippedItems);
+          const xp = Math.round(BASE_XP * xpStars * boostMult);
 
           const bonusCoins = getPerfectClearBonusCoins(stars, equippedItems);
           if (bonusCoins > 0) useUserStore.getState().addCoins(bonusCoins);
