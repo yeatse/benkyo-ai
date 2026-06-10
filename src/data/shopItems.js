@@ -310,7 +310,7 @@ export const ITEM_DEFINITIONS = [
     name: '达摩不倒翁',
     subtitle: '装备',
     desc: '跌倒也会站起的达摩，守住每一次收益',
-    effectDesc: '获得的金币数不会受星星衰减',
+    effectDesc: '获得的经验值不会受星星衰减',
     icon: '🔴',
     iconPath: 'item/daruma.png',
     iconBg: '#FFF7ED',

@@ -8,7 +8,7 @@ import useDailyTaskStore, { DAILY_TASK_EVENTS } from './dailyTaskStore';
 import useBadgeStore from './badgeStore';
 import { applyEmaStarFloor, canUseSakuraPetalShield, canUseUmbrellaShield, getPerfectClearBonusCoins } from '../lib/equipment-effects';
 
-export const XP_PER_LEVEL = 200;
+export const XP_PER_LEVEL = 400;
 export const BASE_XP = 60;
 export const computeLevel = (totalXp) => Math.floor(totalXp / XP_PER_LEVEL) + 1;
 
