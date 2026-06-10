@@ -73,6 +73,21 @@ function getShopContentMotionTargets(root) {
   };
 }
 
+const SHOP_CARD_ENTER_FROM = {
+  opacity: 0,
+  y: 16,
+  force3D: true,
+};
+
+const SHOP_CARD_ENTER_TO = {
+  opacity: 1,
+  y: 0,
+  duration: 0.36,
+  ease: 'power2.out',
+  stagger: 0.05,
+  force3D: true,
+};
+
 // Flash feedback: item id → 'bought' | 'broke'
 function useFlash() {
   const [flash, setFlash] = useState({});
@@ -474,8 +489,8 @@ export default function ShopPage() {
   // FOUC prevention
   useGSAP(() => {
     const { cards, trailing } = getShopContentMotionTargets(contentRef.current);
-    gsap.set([headerRef.current, contentRef.current], { opacity: 0, y: 16 });
-    gsap.set(cards, { opacity: 0, y: 18, scale: 0.98 });
+    gsap.set([headerRef.current, contentRef.current], { opacity: 0, y: 16, force3D: true });
+    gsap.set(cards, SHOP_CARD_ENTER_FROM);
     gsap.set(trailing, { opacity: 0, y: 12 });
   }, []);
 
@@ -493,16 +508,9 @@ export default function ShopPage() {
   useGSAP(() => {
     const { cards, trailing } = getShopContentMotionTargets(contentRef.current);
     const tl = gsap.timeline();
-    tl.to(headerRef.current, { opacity: 1, y: 0, duration: 0.38, ease: 'back.out(1.8)' }, 0.05);
-    tl.to(contentRef.current, { opacity: 1, y: 0, duration: 0.34, ease: 'back.out(1.7)' }, 0.13);
-    tl.to(cards, {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      duration: 0.42,
-      ease: 'back.out(1.8)',
-      stagger: 0.06,
-    }, 0.2);
+    tl.to(headerRef.current, { opacity: 1, y: 0, duration: 0.34, ease: 'power2.out', force3D: true }, 0.05);
+    tl.to(contentRef.current, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out', force3D: true }, 0.13);
+    tl.to(cards, SHOP_CARD_ENTER_TO, 0.2);
     tl.to(trailing, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' }, 0.46);
   }, []);
 
@@ -514,21 +522,14 @@ export default function ShopPage() {
 
     if (!contentRef.current) return;
     const { cards, trailing } = getShopContentMotionTargets(contentRef.current);
-    gsap.set(contentRef.current, { opacity: 1, y: 0 });
-    gsap.set(cards, { opacity: 0, y: 18, scale: 0.98 });
+    gsap.set(contentRef.current, { opacity: 1, y: 0, force3D: true });
+    gsap.set(cards, SHOP_CARD_ENTER_FROM);
     gsap.set(trailing, { opacity: 0, y: 12 });
 
     const tl = gsap.timeline();
 
     if (!isRenderedGachaView) {
-      tl.to(cards, {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 0.42,
-        ease: 'back.out(1.8)',
-        stagger: 0.06,
-      }, 0);
+      tl.to(cards, SHOP_CARD_ENTER_TO, 0);
       tl.to(trailing, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' }, 0.26);
     }
   }, [renderedView]);

@@ -28,6 +28,19 @@ const REEL_DECEL_DURATION = 2;
 const REEL_ACCEL_DISTANCE_WEIGHT = REEL_ACCEL_DURATION / 2;
 const REEL_CRUISE_DISTANCE_WEIGHT = REEL_CRUISE_DURATION;
 const REEL_DECEL_DISTANCE_WEIGHT = REEL_DECEL_DURATION / 4;
+const COLLECTION_CARD_ENTER_FROM = {
+  opacity: 0,
+  y: 14,
+  force3D: true,
+};
+const COLLECTION_CARD_ENTER_TO = {
+  opacity: 1,
+  y: 0,
+  duration: 0.34,
+  ease: 'power2.out',
+  stagger: 0.045,
+  force3D: true,
+};
 
 function buildResultReel(result) {
   return Array.from({ length: REEL_ITEM_COUNT }, (_, index) => {
@@ -109,7 +122,7 @@ export default function OmamoriGacha() {
   }, [collectionItems]);
 
   useGSAP(() => {
-    gsap.set([stageRef.current, lineupRef.current], { opacity: 0, y: 18 });
+    gsap.set([stageRef.current, lineupRef.current], { opacity: 0, y: 16, force3D: true });
   }, []);
 
   useEffect(() => {
@@ -127,8 +140,8 @@ export default function OmamoriGacha() {
     if (!stageImageReady) return undefined;
 
     const tl = gsap.timeline();
-    tl.to(stageRef.current, { opacity: 1, y: 0, duration: 0.46, ease: 'back.out(1.8)' }, 0.04);
-    tl.to(lineupRef.current, { opacity: 1, y: 0, duration: 0.42, ease: 'back.out(1.7)' }, 0.2);
+    tl.to(stageRef.current, { opacity: 1, y: 0, duration: 0.38, ease: 'power2.out', force3D: true }, 0.04);
+    tl.to(lineupRef.current, { opacity: 1, y: 0, duration: 0.34, ease: 'power2.out', force3D: true }, 0.2);
     tl.call(() => setStageEntered(true));
 
     return () => tl.kill();
@@ -163,23 +176,12 @@ export default function OmamoriGacha() {
     if (!cards?.length) return;
 
     if (hasAnimatedCollectionRef.current) {
-      gsap.set(cards, { opacity: 1, y: 0, scale: 1 });
+      gsap.set(cards, { opacity: 1, y: 0, force3D: true });
       return;
     }
 
     hasAnimatedCollectionRef.current = true;
-    gsap.fromTo(cards, {
-      opacity: 0,
-      y: 18,
-      scale: 0.98,
-    }, {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      duration: 0.42,
-      ease: 'back.out(1.8)',
-      stagger: 0.06,
-    });
+    gsap.fromTo(cards, COLLECTION_CARD_ENTER_FROM, COLLECTION_CARD_ENTER_TO);
   }, [showCollectionGrid]);
 
   useGSAP(() => {
@@ -420,22 +422,21 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
   const settled = drawState === 'settled';
   const modalRarity = settled ? rarity : neutralRarity;
 
-  useEffect(() => {
+  useGSAP(() => {
     const overlay = overlayRef.current;
     const card = cardRef.current;
     const viewport = reelViewportRef.current;
     const track = reelTrackRef.current;
     const particles = particleRef.current;
     const buttons = btnsRef.current;
-    let cancelled = false;
 
     gsap.set(overlay, { opacity: 0 });
-    gsap.set(card, { opacity: 0, y: 54, scale: 0.86, rotate: -1 });
-    gsap.set(viewport, { opacity: 0, y: 8 });
-    gsap.set(buttons, { opacity: 1, y: 0 });
+    gsap.set(card, { opacity: 0, y: 34, scale: 0.96, rotate: 0, force3D: true });
+    gsap.set(viewport, { opacity: 0, y: 6, force3D: true });
+    gsap.set(buttons, { opacity: 1, y: 0, force3D: true });
 
     const startX = viewport ? Math.min(72, viewport.offsetWidth * 0.24) : 48;
-    gsap.set(track, { x: startX });
+    gsap.set(track, { x: startX, force3D: true });
 
     const tl = gsap.timeline();
     tl.to(overlay, { opacity: 1, duration: 0.18 });
@@ -444,15 +445,12 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
       y: 0,
       scale: 1,
       rotate: 0,
-      duration: 0.44,
-      ease: 'back.out(2)',
-      onComplete: () => {
-        if (!cancelled) setReelImagesReady(true);
-      },
+      duration: 0.34,
+      ease: 'power3.out',
+      force3D: true,
     }, '-=0.03');
 
     return () => {
-      cancelled = true;
       tl.kill();
       rollTimelineRef.current?.kill();
       particles.replaceChildren();
@@ -460,24 +458,24 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
   }, [result.id, result.rarity, resultIcon]);
 
   const reelItemsWithIcons = useMemo(() => {
-    if (!reelImagesReady) return [];
     return reelItems.map(item => ({ ...item, iconSrc: resolveIcon(item.iconPath) }));
-  }, [reelImagesReady, reelItems, resolveIcon]);
+  }, [reelItems, resolveIcon]);
 
   useEffect(() => {
-    if (!reelImagesReady || !reelItemsWithIcons.length) return undefined;
+    if (!reelItemsWithIcons.length) return undefined;
 
     const viewport = reelViewportRef.current;
     let cancelled = false;
     Promise.all(reelItemsWithIcons.map(item => preloadImage(item.iconSrc))).then(() => {
       if (cancelled) return;
-      gsap.to(viewport, { opacity: 1, y: 0, duration: 0.24, ease: 'power2.out' });
+      setReelImagesReady(true);
+      gsap.to(viewport, { opacity: 1, y: 0, duration: 0.22, ease: 'power2.out', force3D: true });
     });
 
     return () => {
       cancelled = true;
     };
-  }, [reelImagesReady, reelItemsWithIcons]);
+  }, [reelItemsWithIcons]);
 
   const burstParticles = () => {
     const particles = particleRef.current;
@@ -550,8 +548,8 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
 
     setDrawState('rolling');
     setModalNotice(null);
-    gsap.set(track, { x: startX });
-    gsap.to(buttons, { opacity: 0, y: 12, duration: 0.18, ease: 'power2.out' });
+    gsap.set(track, { x: startX, force3D: true });
+    gsap.to(buttons, { opacity: 0, y: 12, duration: 0.18, ease: 'power2.out', force3D: true });
 
     rollTimelineRef.current?.kill();
     rollTimelineRef.current = gsap.timeline({
@@ -569,18 +567,18 @@ function GachaResultModal({ result, reelItems, targetIndex, coinImg, canDrawAgai
           setGiftboxReward(reward);
         }
         playSoundEffect(isRare ? SOUND_EFFECT_TYPES.LEVEL_COMPLETE : SOUND_EFFECT_TYPES.ANSWER_CORRECT);
-        gsap.to(buttons, { opacity: 1, y: 0, duration: 0.28, ease: 'back.out(1.8)' });
+        gsap.to(buttons, { opacity: 1, y: 0, duration: 0.24, ease: 'power2.out', force3D: true });
       },
     });
     rollTimelineRef.current
-      .to(track, { x: accelX, duration: REEL_ACCEL_DURATION, ease: 'power2.in' })
-      .to(track, { x: cruiseX, duration: REEL_CRUISE_DURATION, ease: 'none' })
-      .to(track, { x: endX, duration: REEL_DECEL_DURATION, ease: 'power4.out' });
+      .to(track, { x: accelX, duration: REEL_ACCEL_DURATION, ease: 'power2.in', force3D: true })
+      .to(track, { x: cruiseX, duration: REEL_CRUISE_DURATION, ease: 'none', force3D: true })
+      .to(track, { x: endX, duration: REEL_DECEL_DURATION, ease: 'power4.out', force3D: true });
   };
 
   const dismiss = (after) => {
     const tl = gsap.timeline({ onComplete: after });
-    tl.to(cardRef.current, { opacity: 0, y: 36, scale: 0.94, duration: 0.22, ease: 'power2.in' });
+    tl.to(cardRef.current, { opacity: 0, y: 30, scale: 0.96, duration: 0.2, ease: 'power2.in', force3D: true });
     tl.to(overlayRef.current, { opacity: 0, duration: 0.16 }, '-=0.08');
   };
 
@@ -696,19 +694,19 @@ function OmamoriDetailModal({ item, onClose }) {
   const rarity = getOmamoriRarity(item.rarity);
   const effect = getOmamoriEffect(item.id);
 
-  useEffect(() => {
+  useGSAP(() => {
     const overlay = overlayRef.current;
     const image = imageRef.current;
     const panel = panelRef.current;
 
     gsap.set(overlay, { opacity: 0 });
-    gsap.set(image, { opacity: 0, y: 128, scale: 0.34, rotate: -5 });
-    gsap.set(panel, { opacity: 0, y: 34 });
+    gsap.set(image, { opacity: 0, y: 54, scale: 0.92, rotate: 0, force3D: true });
+    gsap.set(panel, { opacity: 0, y: 28, force3D: true });
 
     const tl = gsap.timeline();
     tl.to(overlay, { opacity: 1, duration: 0.18, ease: 'power2.out' });
-    tl.to(image, { opacity: 1, y: 0, scale: 1, rotate: 0, duration: 0.62, ease: 'back.out(1.55)' }, 0.06);
-    tl.to(panel, { opacity: 1, y: 0, duration: 0.36, ease: 'power2.out' }, 0.32);
+    tl.to(image, { opacity: 1, y: 0, scale: 1, rotate: 0, duration: 0.42, ease: 'power3.out', force3D: true }, 0.06);
+    tl.to(panel, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out', force3D: true }, 0.26);
 
     return () => tl.kill();
   }, [item.id]);
@@ -716,7 +714,7 @@ function OmamoriDetailModal({ item, onClose }) {
   const dismiss = () => {
     const tl = gsap.timeline({ onComplete: onClose });
     tl.to(panelRef.current, { opacity: 0, y: 28, duration: 0.2, ease: 'power2.in' });
-    tl.to(imageRef.current, { opacity: 0, y: 76, scale: 0.72, rotate: 3, duration: 0.24, ease: 'power2.in' }, '-=0.12');
+    tl.to(imageRef.current, { opacity: 0, y: 56, scale: 0.84, rotate: 0, duration: 0.22, ease: 'power2.in', force3D: true }, '-=0.12');
     tl.to(overlayRef.current, { opacity: 0, duration: 0.16, ease: 'power2.in' }, '-=0.08');
   };
 
