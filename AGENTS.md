@@ -220,7 +220,7 @@ word-match 每配对成功一组 +1 金币
 
 `ShopPage.jsx` 底部固定切换“道具商店 / 御守・護身符”。道具商店仍使用 `data/shopItems.js`；御守扭蛋入口渲染 `components/Shop/OmamoriGacha.jsx`。
 
-御守数据集中在 `data/omamoriGacha.js`：`OMAMORI_GACHA_COST = 200`；概率为 `N 72%`、`R 15%`、`SR 10%`、`SSR 3%`；`OMAMORI_ITEMS` 定义 27 种御守、稀有度、名称和 `sd/*.png` 图标路径；`OMAMORI_LORE` / `getOmamoriLore()` 定义详情页文化小知识；`OMAMORI_EFFECTS` / `getOmamoriEffect()` 定义御守特效说明；`drawOmamori()` 只负责按概率抽取，不写 store。`连勝守`、`勉強ちゃんの絆` 是 App 定制御守。
+御守数据集中在 `data/omamoriGacha.js`：`OMAMORI_GACHA_COST = 200`；概率为 `N 62%`、`R 25%`、`SR 10%`、`SSR 3%`；`OMAMORI_ITEMS` 定义 27 种御守、稀有度、名称和 `sd/*.png` 图标路径；`OMAMORI_LORE` / `getOmamoriLore()` 定义详情页文化小知识；`OMAMORI_EFFECTS` / `getOmamoriEffect()` 定义御守特效说明；`drawOmamori()` 只负责按概率抽取，不写 store。`连勝守`、`勉強ちゃんの絆` 是 App 定制御守。
 
 御守与装备持久化在 `userStore`：`spendCoins(amount)` 扣金币；`recordOmamoriDraw(itemId)` 累加 `omamoriCollection[itemId]`；`markOmamoriDetailViewed()` 写入 `omamoriViewedDetails[itemId]`；`equippedItems[itemId]` 记录装备是否启用。Console 调试方法在 `App.jsx` 暴露：`benkyoDebugAddCoins(amount = 1000)`。
 

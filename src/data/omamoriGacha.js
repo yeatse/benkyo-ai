@@ -3,14 +3,14 @@ export const OMAMORI_GACHA_COST = 200;
 export const OMAMORI_RARITIES = {
   N: {
     label: 'N',
-    rate: 72,
+    rate: 62,
     color: '#64748B',
     bg: 'linear-gradient(135deg, #F8FAFC, #E2E8F0)',
     glow: 'rgba(148, 163, 184, 0.34)',
   },
   R: {
     label: 'R',
-    rate: 15,
+    rate: 25,
     color: '#0D9488',
     bg: 'linear-gradient(135deg, #CCFBF1, #99F6E4)',
     glow: 'rgba(20, 184, 166, 0.34)',
