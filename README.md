@@ -1,4 +1,8 @@
-# 日学 (Benkyo AI)
+<p align="center">
+  <img src="src/assets/icons/benkyochan/logo.png" width="128" alt="日学 Benkyo AI Logo">
+</p>
+
+<h1 align="center">日学 (Benkyo AI)</h1>
 
 日学是一款使用 AI 来生成专属定制课程的游戏化日语学习 App，数据完全存储在本地，交互体验参考 Duolingo。
 它搭建了一套学习循环：生成课程，完成关卡，复习薄弱项，收集奖励，继续前进。
