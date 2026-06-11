@@ -67,16 +67,6 @@ const SOUND_CREDITS = [
   { label: 'Kenney', url: 'https://kenney.nl/' },
 ];
 
-const THIRD_PARTY_TECH = [
-  'React',
-  'Vite',
-  'Tauri',
-  'TailwindCSS',
-  'Zustand',
-  'GSAP',
-  'Vercel AI SDK',
-];
-
 const labelStyle = {
   fontSize: 12,
   fontWeight: 700,

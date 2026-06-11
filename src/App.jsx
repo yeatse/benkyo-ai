@@ -18,6 +18,7 @@ import WrongReviewPracticePage from './pages/WrongReviewPracticePage';
 import MainLayout from './components/Layout/MainLayout';
 import useUserStore from './store/userStore';
 import useDailyTaskStore from './store/dailyTaskStore';
+import useNextChapterRecommendationStore from './store/nextChapterRecommendationStore';
 import XpBoostWidget from './components/UI/XpBoostWidget';
 import SoundEffectProvider from './components/UI/SoundEffectProvider';
 import DailyTaskToast from './components/UI/DailyTaskToast';
@@ -43,12 +44,14 @@ function AppInit() {
   const syncHearts  = useUserStore(s => s.syncHearts);
   const syncXpBoost = useUserStore(s => s.syncXpBoost);
   const ensureDailyTasks = useDailyTaskStore(s => s.ensureToday);
+  const resetRecommendationRuntime = useNextChapterRecommendationStore(s => s.resetRuntimeState);
   useEffect(() => {
     checkStreak();
     syncHearts();
     syncXpBoost();
     ensureDailyTasks();
-  }, [checkStreak, ensureDailyTasks, syncHearts, syncXpBoost]);
+    resetRecommendationRuntime();
+  }, [checkStreak, ensureDailyTasks, resetRecommendationRuntime, syncHearts, syncXpBoost]);
 
   useEffect(() => {
     window.benkyoDebugDailyTaskToast = (selector = 'small') => (
