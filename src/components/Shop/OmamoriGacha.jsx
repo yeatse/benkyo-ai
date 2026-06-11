@@ -22,7 +22,7 @@ gsap.registerPlugin(useGSAP);
 
 const REEL_ITEM_COUNT = 48;
 const REEL_TARGET_INDEX = 42;
-const COLLECTION_GRID_DELAY_MS = 1500;
+const COLLECTION_GRID_DELAY_MS = 0;
 const REEL_ACCEL_DURATION = 1;
 const REEL_CRUISE_DURATION = 2;
 const REEL_DECEL_DURATION = 2;
@@ -135,7 +135,7 @@ export default function OmamoriGacha() {
   }, [collectionItems]);
 
   useGSAP(() => {
-    gsap.set([stageRef.current, lineupRef.current], { opacity: 0, y: 16, force3D: true });
+    gsap.set(lineupRef.current, { opacity: 0, y: 16, force3D: true });
   }, []);
 
   useEffect(() => {
@@ -153,8 +153,7 @@ export default function OmamoriGacha() {
     if (!stageImageReady) return undefined;
 
     const tl = gsap.timeline();
-    tl.to(stageRef.current, { opacity: 1, y: 0, duration: 0.38, ease: 'power2.out', force3D: true }, 0.04);
-    tl.to(lineupRef.current, { opacity: 1, y: 0, duration: 0.34, ease: 'power2.out', force3D: true }, 0.2);
+    tl.to(lineupRef.current, { opacity: 1, y: 0, duration: 0.34, ease: 'power2.out', force3D: true }, 0.12);
     tl.call(() => setStageEntered(true));
 
     return () => tl.kill();
@@ -270,18 +269,8 @@ export default function OmamoriGacha() {
   };
 
   return (
-    <div ref={rootRef} className="omamori-gacha" data-ui-click-sfx>
-      {!stageImageReady && (
-        <div className="omamori-stage-loading" role="status" aria-live="polite">
-          {/* <span>御守を準備中</span>
-          <span className="omamori-lineup-loading__dots" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span> */}
-        </div>
-      )}
-      <section ref={stageRef} className={`omamori-stage omamori-stage--${phase}`}>
+    <div ref={rootRef} className="omamori-gacha" data-ui-click-sfx aria-busy={!stageImageReady}>
+      <section ref={stageRef} className={`omamori-stage omamori-stage--${phase} ${stageImageReady ? 'omamori-stage--image-ready' : 'omamori-stage--preloading'}`}>
         <div
           className="omamori-stage__aura"
           aria-hidden="true"

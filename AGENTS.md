@@ -397,4 +397,4 @@ TTS 缓存：
 9. 涉及音频时区分 TTS 语音与 UI 音效。
 10. 涉及全屏布局时检查 Android 原生 safe area 与 `body overflow:hidden`。
 11. 涉及护身符特效时优先复用 `lib/equipment-effects.js`，避免 UI 展示和实际扣费/结算逻辑分叉。
-12. 修改后至少运行 `npm run lint`；重要功能或路由变更同时运行 `npm run build`。
+12. 修改后至少运行 `npm run lint`；重要功能或路由变更只需运行 `npm run build` 确认即可，不要启动 Vite 开发服务器或内置浏览器。

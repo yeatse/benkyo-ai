@@ -1050,23 +1050,6 @@ rt {
   padding-bottom: 8px;
 }
 
-.omamori-stage-loading {
-  min-height: 440px;
-  border-radius: 24px;
-  border: 1.5px solid rgba(229,224,255,0.9);
-  background:
-    linear-gradient(145deg, rgba(255,255,255,0.96), rgba(255,247,237,0.9)),
-    linear-gradient(145deg, #7F1D1D, #F59E0B 44%, var(--tp));
-  color: var(--tp);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 900;
-  box-shadow: 0 8px 24px rgba(91,79,233,0.10);
-}
-
 .omamori-stage {
   position: relative;
   overflow: hidden;
@@ -1121,10 +1104,16 @@ rt {
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
+  opacity: 0;
   transform: scale(1.02);
   transform-origin: center;
+  transition: opacity 0.28s ease;
   will-change: transform;
   animation: omamoriIntroBreath 4.2s ease-in-out infinite;
+}
+
+.omamori-stage--image-ready .omamori-stage__intro {
+  opacity: 1;
 }
 
 .omamori-stage__aura::before {
