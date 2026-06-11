@@ -3,45 +3,60 @@
 日学是一款使用 AI 来生成专属定制课程的游戏化日语学习 App，数据完全存储在本地，交互体验参考 Duolingo。
 它搭建了一套学习循环：生成课程，完成关卡，复习薄弱项，收集奖励，继续前进。
 
-> 使用前需要在「我的 → 设置」配置 AI 模型，课程生成、题目生成都依赖该配置，支持 OpenAI、Anthropic、Google Gemini、DeepSeek、阿里云百炼 / Qwen、月之暗面 Kimi、智谱 GLM、火山引擎 / 豆包、百度千帆 / 文心、腾讯混元、MiniMax，以及自定义 OpenAI-compatible 端点。配置 TTS 语音模型后体验更佳，支持 CosyVoice、Qwen-TTS、MiniMax（阿里云百炼 / 官方 API）和豆包语音（火山引擎）。
+## 使用前配置
+
+配置入口：应用内「我的 → 设置」。
+
+| 配置 | 是否必需 | 用途 | 支持 |
+| --- | --- | --- | --- |
+| AI 模型 | 必需 | 课程生成、题目生成 | OpenAI、Anthropic、Google Gemini、DeepSeek<br>阿里云百炼 / Qwen、月之暗面 Kimi、智谱 GLM、MiniMax<br>火山引擎 / 豆包、百度千帆 / 文心、腾讯混元<br>自定义 OpenAI-compatible 端点 |
+| TTS 语音模型 | 可选，推荐配置 | 日语句子、单词和语法例句朗读 | CosyVoice、Qwen-TTS<br>MiniMax（阿里云百炼 / 官方 API）<br>豆包语音（火山引擎） |
 
 ## 截图导览
 
-### AI 生成与章节地图
+<details>
+<summary><strong>AI 生成与章节地图</strong></summary>
+
+<br>
 
 <table>
   <tr>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-09-03-616_com.benkyo.ai.jpg" width="220" alt="AI 课程偏好选择"><br>
       <strong>课程偏好选择</strong><br>
-      <sub>首次创建课程时选择学习风格、场景和节奏。</sub>
+      <sub>选择学习风格、节奏、自定义提示词等。</sub>
     </td>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-11-18-691_com.benkyo.ai.jpg" width="220" alt="AI 正在生成课程"><br>
       <strong>AI 生成进度</strong><br>
-      <sub>展示规划课程结构、生成语法讲解和题目的流水线进度。</sub>
+      <sub>由 AI 生成的课程和知识讲解。</sub>
     </td>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-32-26-418_com.benkyo.ai.jpg" width="220" alt="章节地图"><br>
       <strong>章节地图</strong><br>
-      <sub>按章节推进关卡，显示语法入口、锁定状态、星级和生命值。</sub>
+      <sub>类似 Duolingo 的章节列表，故事化课程。</sub>
     </td>
   </tr>
 </table>
 
-### 课程学习与闯关
+</details>
+
+<details>
+<summary><strong>课程学习与闯关</strong></summary>
+
+<br>
 
 <table>
   <tr>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-32-43-948_com.benkyo.ai.jpg" width="220" alt="语法教程"><br>
       <strong>语法教程</strong><br>
-      <sub>AI 生成章节语法、例句、词汇和可朗读的日语内容。</sub>
+      <sub>AI 生成章节语法教程，包含例句、词汇等。</sub>
     </td>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-32-57-097_com.benkyo.ai.jpg" width="220" alt="关卡详情"><br>
       <strong>关卡详情</strong><br>
-      <sub>进入关卡前查看语法要点、关卡知识讲解。</sub>
+      <sub>每个关卡配有单独知识讲解以及语法要点。</sub>
     </td>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-33-56-177_com.benkyo.ai.jpg" width="220" alt="选词填空题"><br>
@@ -53,40 +68,31 @@
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-34-54-667_com.benkyo.ai.jpg" width="220" alt="单词配对题"><br>
       <strong>单词配对</strong><br>
-      <sub>点击日语和中文词卡完成配对，适合快速记忆词汇。</sub>
+      <sub>点击词卡完成配对，快速记忆词汇。</sub>
     </td>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-36-13-317_com.benkyo.ai.jpg" width="220" alt="句子翻译题"><br>
       <strong>句子翻译</strong><br>
-      <sub>使用词卡翻译日语句子，并结合反馈推进下一题。</sub>
+      <sub>使用词卡进行日译中、中译日。</sub>
     </td>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-17-03-914_com.benkyo.ai.jpg" width="220" alt="关卡结算"><br>
       <strong>关卡结算</strong><br>
-      <sub>根据正确率结算星级、XP、金币等资源道具。</sub>
+      <sub>闯关结算星级、XP、金币等资源道具。</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-20-12-635_com.benkyo.ai.jpg" width="220" alt="礼物盒奖励"><br>
       <strong>礼物盒奖励</strong><br>
-      <sub>各种场景都有可能掉落礼物盒，开出金币或道具。</sub>
+      <sub>各种场景都可能掉落礼物盒，开出道具。</sub>
     </td>
-    <td align="center" width="33%"></td>
-    <td align="center" width="33%"></td>
-  </tr>
-</table>
-
-### 练习中心与单词本
-
-<table>
-  <tr>
-    <td align="center" width="50%">
+    <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-38-51-120_com.benkyo.ai.jpg" width="220" alt="练习中心"><br>
       <strong>练习中心</strong><br>
-      <sub>听力练习、课程巩固、单词复习、错题重练集中入口。</sub>
+      <sub>涵盖各种各样专项练习以及复习。</sub>
     </td>
-    <td align="center" width="50%">
+    <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-39-00-352_com.benkyo.ai.jpg" width="220" alt="单词本"><br>
       <strong>单词本</strong><br>
       <sub>自动收录词汇，支持排序、五十音筛选和单词朗读。</sub>
@@ -94,23 +100,28 @@
   </tr>
 </table>
 
-### 商店、御守与个人成长
+</details>
+
+<details>
+<summary><strong>个人成长与娱乐系统</strong></summary>
+
+<br>
 
 <table>
   <tr>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-37-18-693_com.benkyo.ai.jpg" width="220" alt="道具商店"><br>
       <strong>道具商店</strong><br>
-      <sub>购买 XP 加成、蛋糕、咖啡等道具，部分商品需要随着推进进度解锁。</sub>
+      <sub>购买各种道具，随着推进进度解锁。</sub>
     </td>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-40-31-562_com.benkyo.ai.jpg" width="220" alt="御守 Gacha"><br>
       <strong>御守 Gacha</strong><br>
-      <sub>消耗金币抽取不同稀有度的御守，并解锁各种效果。</sub>
+      <sub>消耗金币抽卡，并解锁各种加成效果。</sub>
     </td>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-37-36-597_com.benkyo.ai.jpg" width="220" alt="御守抽取结果"><br>
-      <strong>抽取结果</strong><br>
+      <strong>御守抽取</strong><br>
       <sub>类似游戏的滚动抽卡效果。</sub>
     </td>
   </tr>
@@ -128,19 +139,25 @@
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-40-03-373_com.benkyo.ai.jpg" width="220" alt="个人主页"><br>
       <strong>个人主页</strong><br>
-      <sub>展示等级、XP、各种资源、每日任务和章节进度。</sub>
+      <sub>展示各种资源、每日任务和章节进度。</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
       <img src="images/Screenshot_2026-06-11-22-43-09-200_com.benkyo.ai.jpg" width="220" alt="背包"><br>
       <strong>背包</strong><br>
-      <sub>管理各种各样的消耗道具和已装备的护身符。</sub>
+      <sub>管理各种各样的道具。</sub>
     </td>
-    <td align="center" width="33%"></td>
+    <td align="center" width="33%">
+      <img src="images/Screenshot_2026-06-11-23-50-39-401_com.benkyo.ai.jpg" width="220" alt="徽章"><br>
+      <strong>徽章</strong><br>
+      <sub>达成成就解锁徽章。</sub>
+    </td>
     <td align="center" width="33%"></td>
   </tr>
 </table>
+
+</details>
 
 ## 技术栈
 
